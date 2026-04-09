@@ -16,6 +16,7 @@ public class TaskModel {
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private TaskStatus status;
 }
