@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity(name = "tasks")
-public class Task {
+public class TaskModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

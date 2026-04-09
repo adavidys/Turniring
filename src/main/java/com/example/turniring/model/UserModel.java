@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Data
 @Entity(name = "users")
-public class User {
+public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,7 +34,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-    private Set<Task> tasks;
+    private Set<TaskModel> tasks;
 
     @ManyToMany
     @JoinTable(
@@ -42,5 +42,5 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "team_id")
     )
-    private Set<Team> teams;
+    private Set<TeamModel> teams;
 }

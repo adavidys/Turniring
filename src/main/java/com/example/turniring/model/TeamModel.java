@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Data
 @Entity(name = "teams")
-public class Team {
+public class TeamModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,8 +17,8 @@ public class Team {
 
     @ManyToOne
     @JoinColumn(name = "task_id")
-    private Task task;
+    private TaskModel task;
 
     @ManyToMany(mappedBy = "teams")
-    private Set<User> users;
+    private Set<UserModel> users;
 }
