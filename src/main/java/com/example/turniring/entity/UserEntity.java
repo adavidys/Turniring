@@ -1,4 +1,4 @@
-package com.example.turniring.model;
+package com.example.turniring.entity;
 
 
 import jakarta.persistence.*;
@@ -8,7 +8,7 @@ import java.util.Set;
 
 @Data
 @Entity(name = "users")
-public class UserModel {
+public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,7 +34,7 @@ public class UserModel {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-    private Set<TaskModel> tasks;
+    private Set<TaskEntity> tasks;
 
     @ManyToMany
     @JoinTable(
@@ -42,5 +42,5 @@ public class UserModel {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "team_id")
     )
-    private Set<TeamModel> teams;
+    private Set<TeamEntity> teams;
 }

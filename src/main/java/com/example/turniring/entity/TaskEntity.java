@@ -1,11 +1,11 @@
-package com.example.turniring.model;
+package com.example.turniring.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity(name = "tasks")
-public class TaskModel {
+public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,4 +1,4 @@
-package com.example.turniring.model;
+package com.example.turniring.entity;
 
 public enum TaskStatus {
     DRAFT,
