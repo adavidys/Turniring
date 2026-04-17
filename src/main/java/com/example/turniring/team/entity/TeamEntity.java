@@ -1,5 +1,6 @@
 package com.example.turniring.entity;
 
+import com.example.turniring.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
