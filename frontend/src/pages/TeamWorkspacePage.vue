@@ -1,94 +1,125 @@
 <template>
   <div class="page-grid">
     <section class="hero-card stack">
-      <span class="eyebrow">Team workspace</span>
+      <span class="eyebrow">{{ t("team.workspace") }}</span>
       <div class="toolbar">
         <div class="stack-sm">
-          <h1 class="title-lg">Captain desk</h1>
-          <p class="text-soft">
-            Manage your roster, inspect active tasks, and submit GitHub/demo links before deadlines close.
-          </p>
+          <h1 class="title-lg">{{ t("team.captainDesk") }}</h1>
+          <p class="text-soft">{{ t("team.workspaceCopy") }}</p>
         </div>
-        <RouterLink class="btn-tonal" to="/profile">Profile</RouterLink>
+        <div class="btn-row">
+          <RouterLink class="btn-tonal" to="/teams/create">{{ tx("Створити", "Create") }}</RouterLink>
+          <RouterLink class="btn-ghost" to="/teams/join">{{ tx("Приєднати", "Join") }}</RouterLink>
+          <RouterLink class="btn-ghost" to="/profile">{{ t("nav.profile") }}</RouterLink>
+        </div>
       </div>
     </section>
 
-    <div v-if="loading" class="panel">Loading team workspace…</div>
+    <div v-if="loading" class="panel">{{ t("common.loading") }}</div>
     <div v-else-if="errorMessage" class="error-box">{{ errorMessage }}</div>
     <template v-else>
       <SectionBlock
         v-if="!teams.length"
-        title="No teams yet"
-        description="Your account exists, but you have not registered a team. Pick a tournament with open registration and enter the bracket."
-        eyebrow="Get started"
+        :title="t('team.noTeams')"
+        :description="t('team.noTeamsDesc')"
+        :eyebrow="tx('Початок', 'Start')"
       >
         <div v-if="openTournaments.length" class="grid-auto">
           <TournamentCard v-for="tournament in openTournaments" :key="tournament.id" :tournament="tournament" />
         </div>
-        <div v-else class="empty-box">No open registration windows right now.</div>
+        <div v-else class="empty-box">{{ t("team.openRegistrationsEmpty") }}</div>
       </SectionBlock>
 
       <template v-else>
         <section class="split">
-          <SectionBlock title="Your teams" description="Select a roster to work on submissions." eyebrow="Roster">
+          <SectionBlock :title="t('team.yourTeams')" :description="t('team.yourTeamsDesc')" :eyebrow="tx('Склад', 'Roster')">
             <div class="stack">
               <button
                 v-for="team in teams"
                 :key="team.id"
                 class="btn-ghost"
                 type="button"
-                @click="selectTeam(team)"
+                @click="handleTeamSelection(team)"
               >
-                {{ team.name }} · tournament #{{ team.tournamentId }}
+                {{ team.name }} · {{ team.tournamentId ? `${tx("турнір", "tournament")} #${team.tournamentId}` : tx("без олімпіади", "without olympiad") }}
               </button>
             </div>
           </SectionBlock>
 
           <SectionBlock
             v-if="selectedTeam"
-            title="Edit roster"
-            description="Updates are allowed until the registration window closes unless an admin overrides it."
-            eyebrow="Manage"
-          >
-            <form class="stack" @submit.prevent="saveTeam">
+            :title="t('team.editRoster')"
+            :description="t('team.editRosterDesc')"
+             :eyebrow="tx('Керування', 'Manage')"
+            >
+             <form class="stack" @submit.prevent="saveTeam">
+              <div class="panel stack-sm">
+                <h3 class="title-sm">{{ tx("Олімпіада", "Olympiad") }}</h3>
+                <p class="text-soft" v-if="selectedTeam.tournamentId">{{ tx("Команда приєднана до турніру", "Team is joined to tournament") }} #{{ selectedTeam.tournamentId }}.</p>
+                <template v-else>
+                  <p class="text-soft">{{ tx("Команда ще не приєднана до олімпіади.", "Team is not joined to an olympiad yet.") }}</p>
+                  <div class="field" v-if="openTournaments.length">
+                    <label>{{ tx("Оберіть олімпіаду", "Select olympiad") }}</label>
+                    <select v-model.number="joinTournamentId">
+                      <option :value="null">{{ tx("Оберіть олімпіаду", "Select olympiad") }}</option>
+                      <option v-for="tournament in openTournaments" :key="tournament.id" :value="tournament.id">
+                        {{ tournament.title }} · {{ tournament.status }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="empty-box" v-else>{{ tx("Немає відкритих олімпіад для приєднання.", "No open olympiads to join.") }}</div>
+                </template>
+                <div class="btn-row">
+                  <button class="btn-tonal" type="button" :disabled="joiningTournament || !joinTournamentId || selectedTeam.tournamentId" @click="joinTournament">
+                    {{ joiningTournament ? tx("Приєднання…", "Joining…") : tx("Приєднати до олімпіади", "Join olympiad") }}
+                  </button>
+                  <button class="btn-ghost" type="button" :disabled="leavingTournament || !selectedTeam.tournamentId" @click="leaveTournament">
+                    {{ leavingTournament ? tx("Вихід…", "Leaving…") : tx("Вийти з олімпіади", "Leave olympiad") }}
+                  </button>
+                  <button class="btn-danger" type="button" :disabled="deletingTeam" @click="deleteTeam">
+                    {{ deletingTeam ? tx("Видалення…", "Deleting…") : tx("Вийти з командою", "Leave team") }}
+                  </button>
+                </div>
+              </div>
+
               <div class="field-grid">
                 <div class="field">
-                  <label>Team name</label>
+                  <label>{{ t("tournament.teamName") }}</label>
                   <input v-model="teamForm.name" type="text" required />
                 </div>
                 <div class="field">
-                  <label>City</label>
+                  <label>{{ t("tournament.city") }}</label>
                   <input v-model="teamForm.city" type="text" />
                 </div>
                 <div class="field">
-                  <label>Organization</label>
+                  <label>{{ t("tournament.org") }}</label>
                   <input v-model="teamForm.organization" type="text" />
                 </div>
                 <div class="field">
-                  <label>Telegram / Discord</label>
+                  <label>{{ t("tournament.contact") }}</label>
                   <input v-model="teamForm.contactHandle" type="text" />
                 </div>
               </div>
 
               <div class="toolbar">
-                <h3 class="title-sm">Additional members</h3>
-                <button class="btn-tonal" type="button" @click="teamForm.members.push({ fullName: '', email: '' })">Add member</button>
+                <h3 class="title-sm">{{ t("tournament.additionalMembers") }}</h3>
+                <button class="btn-tonal" type="button" @click="addEditableMember">{{ t("tournament.addMember") }}</button>
               </div>
 
               <div v-for="(member, index) in teamForm.members" :key="index" class="panel stack-sm">
                 <div class="field-grid">
                   <div class="field">
-                    <label>Full name</label>
+                    <label>{{ t("tournament.fullName") }}</label>
                     <input v-model="member.fullName" type="text" required />
                   </div>
                   <div class="field">
-                    <label>Email</label>
+                    <label>{{ t("auth.email") }}</label>
                     <input v-model="member.email" type="email" required />
                   </div>
                 </div>
                 <div class="btn-row">
-                  <button class="btn-ghost" type="button" @click="removeEditableMember(index)" :disabled="teamForm.members.length === 1">
-                    Remove
+                  <button class="btn-ghost" type="button" @click="removeEditableMember(index)">
+                    {{ t("tournament.removeMember") }}
                   </button>
                 </div>
               </div>
@@ -98,7 +129,7 @@
 
               <div class="btn-row">
                 <button class="btn" type="submit" :disabled="savingTeam">
-                  {{ savingTeam ? "Saving…" : "Save roster" }}
+                  {{ savingTeam ? t("team.saving") : t("team.saveRoster") }}
                 </button>
               </div>
             </form>
@@ -106,11 +137,11 @@
         </section>
 
         <SectionBlock
-          v-if="selectedTeam"
-          title="Tasks and submissions"
-          description="Each task keeps its own submission record. Drafts are overwritten by the latest save."
-          eyebrow="Delivery"
-        >
+          v-if="selectedTeam && selectedTeam.tournamentId"
+          :title="t('team.tasks')"
+          :description="t('team.tasksDesc')"
+            :eyebrow="tx('Подання', 'Submissions')"
+         >
           <div v-if="tasks.length" class="stack">
             <article v-for="task in tasks" :key="task.id" class="panel stack">
               <div class="toolbar">
@@ -122,26 +153,26 @@
               </div>
 
               <div class="stat-row">
-                <span class="stat-chip">Starts {{ formatDateTime(task.startAt) }}</span>
-                <span class="stat-chip">Deadline {{ formatDateTime(task.deadlineAt) }}</span>
+                <span class="stat-chip">{{ t("team.starts") }} {{ formatDateTime(task.startAt) }}</span>
+                <span class="stat-chip">{{ t("team.deadline") }} {{ formatDateTime(task.deadlineAt) }}</span>
               </div>
 
               <form class="stack" @submit.prevent="saveSubmission(task.id)">
                 <div class="field-grid">
                   <div class="field">
-                    <label>GitHub repository</label>
+                    <label>{{ t("team.github") }}</label>
                     <input v-model="submissionForms[task.id].githubUrl" type="url" required />
                   </div>
                   <div class="field">
-                    <label>Demo video URL</label>
+                    <label>{{ t("team.demo") }}</label>
                     <input v-model="submissionForms[task.id].demoVideoUrl" type="url" required />
                   </div>
                   <div class="field">
-                    <label>Live demo URL</label>
+                    <label>{{ t("team.live") }}</label>
                     <input v-model="submissionForms[task.id].liveDemoUrl" type="url" />
                   </div>
                   <div class="field">
-                    <label>Summary</label>
+                    <label>{{ t("team.summary") }}</label>
                     <textarea v-model="submissionForms[task.id].summary"></textarea>
                   </div>
                 </div>
@@ -151,13 +182,13 @@
 
                 <div class="btn-row">
                   <button class="btn" type="submit" :disabled="savingSubmission[task.id]">
-                    {{ savingSubmission[task.id] ? "Saving…" : "Save submission" }}
+                    {{ savingSubmission[task.id] ? t("team.saving") : t("team.saveSubmission") }}
                   </button>
                 </div>
               </form>
             </article>
           </div>
-          <div v-else class="empty-box">No visible tasks for the selected tournament.</div>
+          <div v-else class="empty-box">{{ t("common.none") }}</div>
         </SectionBlock>
       </template>
     </template>
@@ -173,6 +204,7 @@ import TournamentCard from "../components/TournamentCard.vue";
 import { api } from "../services/api";
 import { notifier } from "../services/notify";
 import { formatDateTime, getErrorMessage } from "../services/formatters";
+import { t, tx } from "../services/i18n";
 
 const loading = ref(true);
 const errorMessage = ref("");
@@ -181,6 +213,10 @@ const openTournaments = ref([]);
 const tasks = ref([]);
 const selectedTeamId = ref(null);
 const savingTeam = ref(false);
+const joiningTournament = ref(false);
+const leavingTournament = ref(false);
+const deletingTeam = ref(false);
+const joinTournamentId = ref(null);
 const teamError = ref("");
 const teamMessage = ref("");
 
@@ -189,7 +225,7 @@ const teamForm = reactive({
   city: "",
   organization: "",
   contactHandle: "",
-  members: [{ fullName: "", email: "" }]
+  members: []
 });
 
 const submissionForms = reactive({});
@@ -223,16 +259,23 @@ function setTeamForm(team) {
   teamForm.members = team.members
     .filter((member) => !member.captain)
     .map((member) => ({ fullName: member.fullName, email: member.email }));
-  if (!teamForm.members.length) {
-    teamForm.members = [{ fullName: "", email: "" }];
-  }
+}
+
+function addEditableMember() {
+  teamForm.members.push({ fullName: "", email: "" });
 }
 
 async function selectTeam(team) {
   selectedTeamId.value = team.id;
+  joinTournamentId.value = null;
   setTeamForm(team);
   teamError.value = "";
   teamMessage.value = "";
+  tasks.value = [];
+
+  if (!team.tournamentId) {
+    return;
+  }
 
   tasks.value = await api.team.tasks(team.tournamentId);
   for (const task of tasks.value) {
@@ -261,8 +304,24 @@ async function selectTeam(team) {
   }
 }
 
+function upsertTeam(updatedTeam) {
+  const index = teams.value.findIndex((team) => team.id === updatedTeam.id);
+  if (index >= 0) {
+    teams.value[index] = updatedTeam;
+  }
+}
+
+async function handleTeamSelection(team) {
+  try {
+    await selectTeam(team);
+  } catch (error) {
+    teamError.value = getErrorMessage(error);
+    notifier.pushNotification(teamError.value, "error");
+  }
+}
+
 function removeEditableMember(index) {
-  if (teamForm.members.length > 1) {
+  if (teamForm.members.length > 0) {
     teamForm.members.splice(index, 1);
   }
 }
@@ -276,17 +335,80 @@ async function saveTeam() {
   teamMessage.value = "";
   try {
     const updatedTeam = await api.team.updateTeam(selectedTeam.value.id, teamForm);
-    const index = teams.value.findIndex((team) => team.id === updatedTeam.id);
-    if (index >= 0) {
-      teams.value[index] = updatedTeam;
-    }
+    upsertTeam(updatedTeam);
     setTeamForm(updatedTeam);
-    teamMessage.value = "Roster updated.";
-    notifier.pushNotification("Team roster updated.", "success");
+    teamMessage.value = t("team.rosterSaved");
+    notifier.pushNotification(t("team.rosterSavedToast"), "success");
   } catch (error) {
     teamError.value = getErrorMessage(error);
   } finally {
     savingTeam.value = false;
+  }
+}
+
+async function joinTournament() {
+  if (!selectedTeam.value || !joinTournamentId.value || selectedTeam.value.tournamentId) {
+    return;
+  }
+  joiningTournament.value = true;
+  teamError.value = "";
+  teamMessage.value = "";
+  try {
+    const updatedTeam = await api.team.joinTeam(selectedTeam.value.id, joinTournamentId.value);
+    upsertTeam(updatedTeam);
+    await selectTeam(updatedTeam);
+    teamMessage.value = tx("Команду приєднано до олімпіади.", "Team joined the olympiad.");
+    notifier.pushNotification(tx("Команду приєднано до олімпіади.", "Team joined the olympiad."), "success");
+  } catch (error) {
+    teamError.value = getErrorMessage(error);
+  } finally {
+    joiningTournament.value = false;
+  }
+}
+
+async function leaveTournament() {
+  if (!selectedTeam.value || !selectedTeam.value.tournamentId) {
+    return;
+  }
+  leavingTournament.value = true;
+  teamError.value = "";
+  teamMessage.value = "";
+  try {
+    const updatedTeam = await api.team.leaveTeam(selectedTeam.value.id);
+    upsertTeam(updatedTeam);
+    await selectTeam(updatedTeam);
+    teamMessage.value = tx("Команда вийшла з олімпіади.", "Team left the olympiad.");
+    notifier.pushNotification(tx("Команда вийшла з олімпіади.", "Team left the olympiad."), "success");
+  } catch (error) {
+    teamError.value = getErrorMessage(error);
+  } finally {
+    leavingTournament.value = false;
+  }
+}
+
+async function deleteTeam() {
+  if (!selectedTeam.value) {
+    return;
+  }
+
+  const accepted = window.confirm(
+    tx("Ви дійсно хочете вийти з командою? Команду буде видалено.", "Do you really want to leave with team? The team will be deleted.")
+  );
+  if (!accepted) {
+    return;
+  }
+
+  deletingTeam.value = true;
+  teamError.value = "";
+  teamMessage.value = "";
+  try {
+    await api.team.deleteTeam(selectedTeam.value.id);
+    notifier.pushNotification(tx("Команду видалено.", "Team deleted."), "success");
+    await loadWorkspace();
+  } catch (error) {
+    teamError.value = getErrorMessage(error);
+  } finally {
+    deletingTeam.value = false;
   }
 }
 
@@ -296,8 +418,8 @@ async function saveSubmission(taskId) {
   savingSubmission[taskId] = true;
   try {
     await api.team.saveSubmission(taskId, submissionForms[taskId]);
-    submissionMessages[taskId] = "Submission saved.";
-    notifier.pushNotification("Submission saved.", "success");
+    submissionMessages[taskId] = t("team.submissionSaved");
+    notifier.pushNotification(t("team.submissionSaved"), "success");
   } catch (error) {
     submissionErrors[taskId] = getErrorMessage(error);
   } finally {

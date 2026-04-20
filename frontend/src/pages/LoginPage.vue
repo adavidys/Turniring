@@ -1,24 +1,21 @@
 <template>
   <section class="split">
     <article class="hero-card stack">
-      <span class="eyebrow">Sign in</span>
-      <h1 class="title-lg">Return to your tournament desk.</h1>
-      <p class="text-soft">
-        Use the credentials from your role workspace. Teams can continue submissions, jury can score assignments,
-        and admins can manage rounds.
-      </p>
+      <span class="eyebrow">{{ t("auth.loginEyebrow") }}</span>
+      <h1 class="title-lg">{{ t("auth.loginHeader") }}</h1>
+      <p class="text-soft">{{ t("auth.loginCopy") }}</p>
     </article>
 
     <article class="panel stack">
-      <h2 class="title-md">Login</h2>
+      <h2 class="title-md">{{ t("auth.loginTitle") }}</h2>
       <form class="stack" @submit.prevent="handleSubmit">
         <div class="field-grid single">
           <div class="field">
-            <label for="login-email">Email</label>
+            <label for="login-email">{{ t("auth.email") }}</label>
             <input id="login-email" v-model="form.email" type="email" required />
           </div>
           <div class="field">
-            <label for="login-password">Password</label>
+            <label for="login-password">{{ t("auth.password") }}</label>
             <input id="login-password" v-model="form.password" type="password" required minlength="8" />
           </div>
         </div>
@@ -27,9 +24,9 @@
 
         <div class="btn-row">
           <button class="btn" type="submit" :disabled="submitting">
-            {{ submitting ? "Signing in..." : "Sign in" }}
+            {{ submitting ? t("auth.signingIn") : t("auth.signIn") }}
           </button>
-          <RouterLink class="btn-ghost" to="/auth/register">Create account</RouterLink>
+          <RouterLink class="btn-ghost" to="/auth/register">{{ t("nav.createAccount") }}</RouterLink>
         </div>
       </form>
     </article>
@@ -42,6 +39,7 @@ import { RouterLink, useRoute, useRouter } from "vue-router";
 import { authStore } from "../services/auth";
 import { notifier } from "../services/notify";
 import { getErrorMessage } from "../services/formatters";
+import { t } from "../services/i18n";
 
 const router = useRouter();
 const route = useRoute();
@@ -59,8 +57,8 @@ async function handleSubmit() {
   errorMessage.value = "";
   try {
     const user = await authStore.login(form);
-    notifier.pushNotification(`Welcome back, ${user.name}.`, "success");
-    router.push(route.query.redirect || "/profile");
+    notifier.pushNotification(t("notifications.welcome", { name: user.name }), "success");
+    router.push(route.query.redirect || authStore.resolveWorkspaceRoute(user.role));
   } catch (error) {
     errorMessage.value = getErrorMessage(error);
   } finally {

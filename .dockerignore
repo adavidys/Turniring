@@ -1,0 +1,11 @@
+build
+.gradle
+frontend/node_modules
+frontend/dist
+database.sqlite
+*.log
+frontend/.npm-cache
+.env
+.env.*
+!.env.example
+deploy/certs

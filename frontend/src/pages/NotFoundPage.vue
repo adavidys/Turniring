@@ -1,16 +1,15 @@
 <template>
   <section class="hero-card stack">
     <span class="eyebrow">404</span>
-    <h1 class="title-lg">This route is outside the bracket.</h1>
-    <p class="text-soft">
-      The page you requested does not exist in the current tournament map.
-    </p>
+    <h1 class="title-lg">{{ t("notFound.title") }}</h1>
+    <p class="text-soft">{{ t("notFound.copy") }}</p>
     <div class="btn-row">
-      <RouterLink class="btn" to="/">Back home</RouterLink>
+      <RouterLink class="btn" to="/">{{ t("notFound.back") }}</RouterLink>
     </div>
   </section>
 </template>
 
 <script setup>
 import { RouterLink } from "vue-router";
+import { t } from "../services/i18n";
 </script>

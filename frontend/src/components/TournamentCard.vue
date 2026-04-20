@@ -10,18 +10,18 @@
       </div>
 
       <div class="stat-row">
-        <span class="stat-chip">Registration: {{ tournament.registrationOpen ? "Open" : "Closed" }}</span>
-        <span class="stat-chip">Teams: {{ tournament.registeredTeams }}</span>
-        <span class="stat-chip">Rounds: {{ tournament.minimumRounds }}</span>
+        <span class="stat-chip">{{ t("tournament.registrationLabel") }}: {{ tournament.registrationOpen ? t("tournament.registrationOpen") : t("tournament.registrationClosed") }}</span>
+        <span class="stat-chip">{{ t("tournament.teams") }}: {{ tournament.registeredTeams }}</span>
+        <span class="stat-chip">{{ t("tournament.rounds") }}: {{ tournament.minimumRounds }}</span>
       </div>
 
       <div class="meta-list">
         <div class="meta-row">
-          <span class="text-soft">Registration window</span>
+          <span class="text-soft">{{ t("tournament.registrationWindow") }}</span>
           <strong>{{ formatDateTime(tournament.registrationStartAt) }} → {{ formatDateTime(tournament.registrationEndAt) }}</strong>
         </div>
         <div class="meta-row">
-          <span class="text-soft">Tournament start</span>
+          <span class="text-soft">{{ t("tournament.start") }}</span>
           <strong>{{ formatDateTime(tournament.startAt) }}</strong>
         </div>
       </div>
@@ -33,6 +33,7 @@
 import { RouterLink } from "vue-router";
 import StatusBadge from "./StatusBadge.vue";
 import { formatDateTime } from "../services/formatters";
+import { t } from "../services/i18n";
 
 defineProps({
   tournament: {

@@ -2,11 +2,42 @@ spring:
   application:
     name: Turniring
   datasource:
-    url: jdbc:sqlite:database.sqlite
-    driver-class-name: org.sqlite.JDBC
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/turniring}
+    username: ${SPRING_DATASOURCE_USERNAME:turniring}
+    password: ${SPRING_DATASOURCE_PASSWORD:turniring}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+
+springdoc:
+  swagger-ui:
+    persist-authorization: true
+    try-it-out-enabled: true
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: 86400000
+    cookie-secure: ${APP_JWT_COOKIE_SECURE:true}
+  invites:
+    expiration-hours: ${APP_INVITES_EXPIRATION_HOURS:1}
+  bootstrap:
+    admin:
+      enabled: true
+      name: System
+      last-name: Admin
+      email: admin@turniring.local
+      password: ${APP_BOOTSTRAP_ADMIN_PASSWORD}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info

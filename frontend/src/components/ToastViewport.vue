@@ -8,8 +8,8 @@
         :data-tone="notification.tone"
       >
         <div class="toolbar">
-          <strong>{{ notification.tone === "error" ? "Error" : notification.tone === "success" ? "Done" : "Notice" }}</strong>
-          <button class="btn-ghost" type="button" @click="notifier.removeNotification(notification.id)">Close</button>
+          <strong>{{ notification.tone === "error" ? t("toast.error") : notification.tone === "success" ? t("toast.success") : t("toast.notice") }}</strong>
+          <button class="btn-ghost" type="button" @click="closeNotification(notification.id)">{{ t("toast.close") }}</button>
         </div>
         <p class="text-soft">{{ notification.message }}</p>
       </article>
@@ -19,4 +19,9 @@
 
 <script setup>
 import { notifier } from "../services/notify";
+import { t } from "../services/i18n";
+
+function closeNotification(id) {
+  notifier.removeNotification(id);
+}
 </script>

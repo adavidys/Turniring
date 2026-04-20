@@ -1,13 +1,15 @@
-package com.example.turniring.entity;
-
+package com.example.turniring.user.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
-import java.util.Set;
-
-@Data
-@Entity(name = "users")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,20 +30,4 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role;
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_tasks",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "task_id")
-    )
-    private Set<TaskEntity> tasks;
-
-    @ManyToMany
-    @JoinTable(
-            name = "users_team",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "team_id")
-    )
-    private Set<TeamEntity> teams;
 }

@@ -1,9 +1,9 @@
-package com.example.turniring.dto;
+package com.example.turniring.user.dto;
 
+import com.example.turniring.user.entity.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegistrationUserRequest(
@@ -22,10 +22,9 @@ public record RegistrationUserRequest(
 
         @NotBlank(message = "Password is required")
         @Size(min = 8, message = "Password must be at least 8 characters long")
-        @Pattern(
-                regexp = "^[\\w\\p{Punct}]+$",
-                message = "Password must contain only English letters, digits, and special characters"
-        )
-        String password
+        String password,
+
+        @Schema(description = "Requested role for self-registration", example = "TEAM")
+        UserRole role
 ) {
 }

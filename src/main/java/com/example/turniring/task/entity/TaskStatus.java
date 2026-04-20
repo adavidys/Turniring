@@ -1,8 +1,8 @@
-package com.example.turniring.entity;
+package com.example.turniring.task.entity;
 
 public enum TaskStatus {
     DRAFT,
-    OPEN,
-    REVIEW,
-    END,
+    ACTIVE,
+    SUBMISSION_CLOSED,
+    EVALUATED
 }

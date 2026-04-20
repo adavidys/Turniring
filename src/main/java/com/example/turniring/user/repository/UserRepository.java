@@ -1,9 +1,11 @@
-package com.example.turniring.repository;
+package com.example.turniring.user.repository;
 
-import com.example.turniring.entity.UserEntity;
+import com.example.turniring.user.entity.UserEntity;
+import com.example.turniring.user.entity.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -11,4 +13,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, Long id);
+
+    List<UserEntity> findAllByRole(UserRole role);
 }

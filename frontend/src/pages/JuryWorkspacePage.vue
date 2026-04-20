@@ -1,20 +1,18 @@
 <template>
   <div class="page-grid">
     <section class="hero-card stack">
-      <span class="eyebrow">Jury workspace</span>
-      <h1 class="title-lg">Score assigned submissions with a transparent rubric.</h1>
-      <p class="text-soft">
-        Every assignment includes repository links, demo video, and a structured grading form that maps to the backend evaluation model.
-      </p>
+      <span class="eyebrow">{{ t("jury.workspace") }}</span>
+      <h1 class="title-lg">{{ t("jury.title") }}</h1>
+      <p class="text-soft">{{ t("jury.copy") }}</p>
     </section>
 
-    <div v-if="loading" class="panel">Loading assignments…</div>
+    <div v-if="loading" class="panel">{{ t("jury.loading") }}</div>
     <div v-else-if="errorMessage" class="error-box">{{ errorMessage }}</div>
     <SectionBlock
       v-else
-      title="Assigned reviews"
-      description="Submit one evaluation per assignment. Saving again overwrites the previous score for that assignment."
-      eyebrow="Queue"
+      :title="t('jury.assigned')"
+      :description="t('jury.assignedDesc')"
+      :eyebrow="tx('Черга', 'Queue')"
     >
       <div v-if="assignments.length" class="stack">
         <article v-for="assignment in assignments" :key="assignment.assignmentId" class="panel stack">
@@ -27,16 +25,32 @@
           </div>
 
           <div class="btn-row">
-            <a class="btn-tonal" :href="assignment.submission.githubUrl" target="_blank" rel="noreferrer">Repository</a>
-            <a class="btn-tonal" :href="assignment.submission.demoVideoUrl" target="_blank" rel="noreferrer">Demo video</a>
             <a
-              v-if="assignment.submission.liveDemoUrl"
+              v-if="toSafeExternalUrl(assignment.submission.githubUrl)"
               class="btn-tonal"
-              :href="assignment.submission.liveDemoUrl"
+              :href="toSafeExternalUrl(assignment.submission.githubUrl)"
               target="_blank"
               rel="noreferrer"
             >
-              Live demo
+              {{ t("jury.repository") }}
+            </a>
+            <a
+              v-if="toSafeExternalUrl(assignment.submission.demoVideoUrl)"
+              class="btn-tonal"
+              :href="toSafeExternalUrl(assignment.submission.demoVideoUrl)"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {{ t("jury.demo") }}
+            </a>
+            <a
+              v-if="toSafeExternalUrl(assignment.submission.liveDemoUrl)"
+              class="btn-tonal"
+              :href="toSafeExternalUrl(assignment.submission.liveDemoUrl)"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {{ t("jury.live") }}
             </a>
           </div>
 
@@ -47,7 +61,7 @@
                 <input v-model.number="forms[assignment.assignmentId][field.key]" type="number" min="0" max="100" required />
               </div>
               <div class="field">
-                <label>Comment</label>
+                <label>{{ t("jury.comment") }}</label>
                 <textarea v-model="forms[assignment.assignmentId].comment"></textarea>
               </div>
             </div>
@@ -57,25 +71,27 @@
 
             <div class="btn-row">
               <button class="btn" type="submit" :disabled="saving[assignment.assignmentId]">
-                {{ saving[assignment.assignmentId] ? "Saving…" : "Save evaluation" }}
+                {{ saving[assignment.assignmentId] ? t("jury.saving") : t("jury.saveEvaluation") }}
               </button>
-              <span class="stat-chip" v-if="assignment.evaluation">Current total: {{ assignment.evaluation.totalScore.toFixed(2) }}</span>
+              <span class="stat-chip" v-if="assignment.evaluation">{{ t("jury.currentTotal") }}: {{ assignment.evaluation.totalScore.toFixed(2) }}</span>
             </div>
           </form>
         </article>
       </div>
-      <div v-else class="empty-box">No assignments available.</div>
+      <div v-else class="empty-box">{{ t("common.none") }}</div>
     </SectionBlock>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 import { api } from "../services/api";
 import { notifier } from "../services/notify";
 import { getErrorMessage } from "../services/formatters";
+import { t, tx } from "../services/i18n";
+import { toSafeExternalUrl } from "../services/security";
 
 const assignments = ref([]);
 const loading = ref(true);
@@ -85,14 +101,14 @@ const errors = reactive({});
 const messages = reactive({});
 const saving = reactive({});
 
-const scoreFields = [
-  { key: "backendScore", label: "Backend" },
-  { key: "databaseScore", label: "Database" },
-  { key: "frontendScore", label: "Frontend" },
-  { key: "mustHaveScore", label: "Must have" },
-  { key: "functionalityScore", label: "Functionality" },
-  { key: "usabilityScore", label: "Usability" }
-];
+const scoreFields = computed(() => [
+  { key: "backendScore", label: tx("Бекенд", "Backend") },
+  { key: "databaseScore", label: tx("База даних", "Database") },
+  { key: "frontendScore", label: tx("Фронтенд", "Frontend") },
+  { key: "mustHaveScore", label: tx("Обов'язково", "Must have") },
+  { key: "functionalityScore", label: tx("Функціональність", "Functionality") },
+  { key: "usabilityScore", label: tx("Зручність", "Usability") }
+]);
 
 function makeForm(assignment) {
   return {
@@ -132,8 +148,8 @@ async function submitEvaluation(assignmentId) {
       assignment.evaluation = evaluation;
       assignment.status = "COMPLETED";
     }
-    messages[assignmentId] = "Evaluation saved.";
-    notifier.pushNotification("Evaluation submitted.", "success");
+    messages[assignmentId] = t("jury.evaluationSaved");
+    notifier.pushNotification(t("jury.evaluationSaved"), "success");
   } catch (error) {
     errors[assignmentId] = getErrorMessage(error);
   } finally {
