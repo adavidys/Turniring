@@ -18,7 +18,7 @@
             v-for="step in stepItems"
             :key="step.id"
             class="btn-ghost"
-            :class="{ 'is-active': currentStep === step.id }"
+            :class="{ 'is-active': currentStep === step.id, 'is-invalid': hasVisibleStepError(step.id) }"
             type="button"
             :disabled="!canOpenStep(step.id)"
             @click="goToStep(step.id)"
@@ -29,14 +29,14 @@
         <p class="text-soft">{{ tx("Редагуйте олімпіаду крок за кроком.", "Edit the olympiad step by step.") }}</p>
       </section>
 
-      <div class="error-box" v-if="errorMessage && currentStep !== 4">{{ errorMessage }}</div>
+      <div class="error-box" v-if="visibleErrorMessage && currentStep !== 4">{{ visibleErrorMessage }}</div>
 
       <SectionBlock v-if="currentStep === 1" :title="t('olympiad.step1Title')" :description="t('olympiad.step1Desc')" :eyebrow="t('olympiad.step1Eyebrow')">
         <div class="field-grid single">
           <div class="field">
             <label>{{ t("olympiad.form.title") }}</label>
-            <input v-model.trim="form.title" type="text" required minlength="3" maxlength="120" :class="{ 'is-invalid': fieldErrors.title }" />
-            <span class="field-error" v-if="fieldErrors.title">{{ fieldErrors.title }}</span>
+            <input v-model.trim="form.title" type="text" required minlength="3" maxlength="120" :class="{ 'is-invalid': visibleFieldError('title') }" />
+            <span class="field-error" v-if="visibleFieldError('title')">{{ visibleFieldError("title") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.description") }}</label>
@@ -46,9 +46,9 @@
               :button-text="tx('Редагувати опис у Markdown', 'Edit description in Markdown')"
               :maxlength="4000"
               :minlength="20"
-              :invalid="Boolean(fieldErrors.description)"
+              :invalid="Boolean(visibleFieldError('description'))"
             />
-            <span class="field-error" v-if="fieldErrors.description">{{ fieldErrors.description }}</span>
+            <span class="field-error" v-if="visibleFieldError('description')">{{ visibleFieldError("description") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.rules") }}</label>
@@ -57,9 +57,9 @@
               :label="t('olympiad.form.rules')"
               :button-text="tx('Редагувати правила у Markdown', 'Edit rules in Markdown')"
               :maxlength="5000"
-              :invalid="Boolean(fieldErrors.rules)"
+              :invalid="Boolean(visibleFieldError('rules'))"
             />
-            <span class="field-error" v-if="fieldErrors.rules">{{ fieldErrors.rules }}</span>
+            <span class="field-error" v-if="visibleFieldError('rules')">{{ visibleFieldError("rules") }}</span>
           </div>
         </div>
         <div class="btn-row">
@@ -73,37 +73,37 @@
         <div class="field-grid">
           <div class="field">
             <label>{{ t("olympiad.form.start") }} · {{ tx("Дата", "Date") }}</label>
-            <input v-model="form.startDate" type="date" required :class="{ 'is-invalid': fieldErrors.startDate }" />
-            <span class="field-error" v-if="fieldErrors.startDate">{{ fieldErrors.startDate }}</span>
+            <input v-model="form.startDate" type="date" required :class="{ 'is-invalid': visibleFieldError('startDate') }" />
+            <span class="field-error" v-if="visibleFieldError('startDate')">{{ visibleFieldError("startDate") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.start") }} · {{ tx("Час", "Time") }}</label>
-            <input v-model="form.startTime" type="time" required :class="{ 'is-invalid': fieldErrors.startTime }" />
-            <span class="field-error" v-if="fieldErrors.startTime">{{ fieldErrors.startTime }}</span>
+            <input v-model="form.startTime" type="time" required :class="{ 'is-invalid': visibleFieldError('startTime') }" />
+            <span class="field-error" v-if="visibleFieldError('startTime')">{{ visibleFieldError("startTime") }}</span>
           </div>
         </div>
         <div class="field-grid">
           <div class="field">
             <label>{{ t("olympiad.form.registrationStart") }} · {{ tx("Дата", "Date") }}</label>
-            <input v-model="form.registrationStartDate" type="date" required :class="{ 'is-invalid': fieldErrors.registrationStartDate }" />
-            <span class="field-error" v-if="fieldErrors.registrationStartDate">{{ fieldErrors.registrationStartDate }}</span>
+            <input v-model="form.registrationStartDate" type="date" required :class="{ 'is-invalid': visibleFieldError('registrationStartDate') }" />
+            <span class="field-error" v-if="visibleFieldError('registrationStartDate')">{{ visibleFieldError("registrationStartDate") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.registrationStart") }} · {{ tx("Час", "Time") }}</label>
-            <input v-model="form.registrationStartTime" type="time" required :class="{ 'is-invalid': fieldErrors.registrationStartTime }" />
-            <span class="field-error" v-if="fieldErrors.registrationStartTime">{{ fieldErrors.registrationStartTime }}</span>
+            <input v-model="form.registrationStartTime" type="time" required :class="{ 'is-invalid': visibleFieldError('registrationStartTime') }" />
+            <span class="field-error" v-if="visibleFieldError('registrationStartTime')">{{ visibleFieldError("registrationStartTime") }}</span>
           </div>
         </div>
         <div class="field-grid">
           <div class="field">
             <label>{{ t("olympiad.form.registrationEnd") }} · {{ tx("Дата", "Date") }}</label>
-            <input v-model="form.registrationEndDate" type="date" required :class="{ 'is-invalid': fieldErrors.registrationEndDate }" />
-            <span class="field-error" v-if="fieldErrors.registrationEndDate">{{ fieldErrors.registrationEndDate }}</span>
+            <input v-model="form.registrationEndDate" type="date" required :class="{ 'is-invalid': visibleFieldError('registrationEndDate') }" />
+            <span class="field-error" v-if="visibleFieldError('registrationEndDate')">{{ visibleFieldError("registrationEndDate") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.registrationEnd") }} · {{ tx("Час", "Time") }}</label>
-            <input v-model="form.registrationEndTime" type="time" required :class="{ 'is-invalid': fieldErrors.registrationEndTime }" />
-            <span class="field-error" v-if="fieldErrors.registrationEndTime">{{ fieldErrors.registrationEndTime }}</span>
+            <input v-model="form.registrationEndTime" type="time" required :class="{ 'is-invalid': visibleFieldError('registrationEndTime') }" />
+            <span class="field-error" v-if="visibleFieldError('registrationEndTime')">{{ visibleFieldError("registrationEndTime") }}</span>
           </div>
         </div>
         <div class="btn-row">
@@ -118,23 +118,23 @@
         <div class="field-grid">
           <div class="field">
             <label>{{ t("olympiad.form.maxTeams") }}</label>
-            <input v-model.number="form.maxTeams" type="number" min="1" :class="{ 'is-invalid': fieldErrors.maxTeams }" />
-            <span class="field-error" v-if="fieldErrors.maxTeams">{{ fieldErrors.maxTeams }}</span>
+            <input v-model.number="form.maxTeams" type="number" min="1" :class="{ 'is-invalid': visibleFieldError('maxTeams') }" />
+            <span class="field-error" v-if="visibleFieldError('maxTeams')">{{ visibleFieldError("maxTeams") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.minimumRounds") }}</label>
-            <input v-model.number="form.minimumRounds" type="number" min="1" required :class="{ 'is-invalid': fieldErrors.minimumRounds }" />
-            <span class="field-error" v-if="fieldErrors.minimumRounds">{{ fieldErrors.minimumRounds }}</span>
+            <input v-model.number="form.minimumRounds" type="number" min="1" required :class="{ 'is-invalid': visibleFieldError('minimumRounds') }" />
+            <span class="field-error" v-if="visibleFieldError('minimumRounds')">{{ visibleFieldError("minimumRounds") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.teamMin") }}</label>
-            <input v-model.number="form.teamMinMembers" type="number" min="1" required :class="{ 'is-invalid': fieldErrors.teamMinMembers }" />
-            <span class="field-error" v-if="fieldErrors.teamMinMembers">{{ fieldErrors.teamMinMembers }}</span>
+            <input v-model.number="form.teamMinMembers" type="number" min="1" required :class="{ 'is-invalid': visibleFieldError('teamMinMembers') }" />
+            <span class="field-error" v-if="visibleFieldError('teamMinMembers')">{{ visibleFieldError("teamMinMembers") }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.teamMax") }}</label>
-            <input v-model.number="form.teamMaxMembers" type="number" min="1" required :class="{ 'is-invalid': fieldErrors.teamMaxMembers }" />
-            <span class="field-error" v-if="fieldErrors.teamMaxMembers">{{ fieldErrors.teamMaxMembers }}</span>
+            <input v-model.number="form.teamMaxMembers" type="number" min="1" required :class="{ 'is-invalid': visibleFieldError('teamMaxMembers') }" />
+            <span class="field-error" v-if="visibleFieldError('teamMaxMembers')">{{ visibleFieldError("teamMaxMembers") }}</span>
           </div>
         </div>
 
@@ -168,7 +168,7 @@
         </div>
 
         <div class="success-box" v-if="message">{{ message }}</div>
-        <div class="error-box" v-if="errorMessage">{{ errorMessage }}</div>
+        <div class="error-box" v-if="visibleErrorMessage">{{ visibleErrorMessage }}</div>
 
         <div class="panel stack-sm" v-if="createdOlympiad">
           <div class="text-soft">{{ t("olympiad.createdHint") }}</div>
@@ -209,6 +209,11 @@ const message = ref("");
 const errorMessage = ref("");
 const createdOlympiad = ref(null);
 const currentStep = ref(1);
+const attemptedSteps = reactive({
+  1: false,
+  2: false,
+  3: false
+});
 const stepItems = [
   { id: 1, eyebrow: "olympiad.step1Eyebrow" },
   { id: 2, eyebrow: "olympiad.step2Eyebrow" },
@@ -257,6 +262,15 @@ const previewTournament = computed(() => {
     registrationEndAt: dateTimeValues.value.registrationEndAt || "",
     startAt: dateTimeValues.value.startAt || ""
   };
+});
+
+const currentStepValidationError = computed(() => getStepValidationError(currentStep.value));
+const shouldShowCurrentStepValidation = computed(() => Boolean(attemptedSteps[currentStep.value]));
+const visibleErrorMessage = computed(() => {
+  if (errorMessage.value) {
+    return errorMessage.value;
+  }
+  return shouldShowCurrentStepValidation.value ? currentStepValidationError.value : "";
 });
 
 const fieldErrors = computed(() => {
@@ -364,7 +378,7 @@ function goToStep(step) {
     const firstInvalid = findFirstInvalidStep(targetStep - 1);
     if (firstInvalid) {
       currentStep.value = firstInvalid.step;
-      errorMessage.value = firstInvalid.message;
+      errorMessage.value = "";
       return;
     }
     errorMessage.value = t("olympiad.stepLocked");
@@ -377,7 +391,8 @@ function goToStep(step) {
 function goNext(nextStep) {
   const currentError = getStepValidationError(currentStep.value);
   if (currentError) {
-    errorMessage.value = currentError;
+    attemptedSteps[currentStep.value] = true;
+    errorMessage.value = "";
     return;
   }
   goToStep(nextStep);
@@ -403,8 +418,9 @@ function toDateTime(date, time) {
 }
 
 async function createOlympiad() {
-  errorMessage.value = validateForm();
-  if (errorMessage.value) {
+  errorMessage.value = "";
+  const validationError = validateForm();
+  if (validationError) {
     return;
   }
 
@@ -439,6 +455,7 @@ function validateForm() {
   const firstInvalid = findFirstInvalidStep(3);
   if (firstInvalid) {
     currentStep.value = firstInvalid.step;
+    attemptedSteps[firstInvalid.step] = true;
     return firstInvalid.message;
   }
   return "";
@@ -480,6 +497,14 @@ function getStepValidationError(step) {
   }
 
   return "";
+}
+
+function visibleFieldError(field) {
+  return shouldShowCurrentStepValidation.value ? fieldErrors.value[field] : "";
+}
+
+function hasVisibleStepError(step) {
+  return currentStep.value === step && Boolean(attemptedSteps[step]) && Boolean(getStepValidationError(step));
 }
 
 function isPositiveInteger(value) {
