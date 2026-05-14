@@ -13,7 +13,7 @@
         <select v-model.number="selectedTournamentId" @change="loadTeams">
           <option :value="null">{{ t("team.selectOlympiad") }}</option>
           <option v-for="tournament in tournaments" :key="tournament.id" :value="tournament.id">
-            {{ tournament.title }} · {{ tournament.status }}
+            {{ tournament.title }} · {{ formatStatus(tournament.status) }}
           </option>
         </select>
       </div>
@@ -52,7 +52,7 @@ import { onMounted, ref } from "vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import { api } from "../services/api";
 import { notifier } from "../services/notify";
-import { getErrorMessage } from "../services/formatters";
+import { formatStatus, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 import { toSafeMailto } from "../services/security";
 

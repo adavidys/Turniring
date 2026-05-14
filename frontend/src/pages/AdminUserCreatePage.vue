@@ -23,9 +23,9 @@
           <div class="field">
             <label>{{ t("auth.role") }}</label>
             <select v-model="userForm.role">
-              <option>TEAM</option>
-              <option>ORGANIZER</option>
-              <option>ADMIN</option>
+              <option v-for="role in roleOptions" :key="role.value" :value="role.value">
+                {{ role.label }}
+              </option>
             </select>
           </div>
           <div class="field">
@@ -62,12 +62,12 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { RouterLink } from "vue-router";
 import SectionBlock from "../components/SectionBlock.vue";
 import { api } from "../services/api";
 import { notifier } from "../services/notify";
-import { getErrorMessage } from "../services/formatters";
+import { formatRole, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 
 const submitting = ref(false);
@@ -80,6 +80,10 @@ const userForm = reactive({
   password: "",
   role: "TEAM"
 });
+const roleOptions = computed(() => ["TEAM", "ORGANIZER", "ADMIN"].map((value) => ({
+  value,
+  label: formatRole(value)
+})));
 
 async function createUser() {
   submitting.value = true;

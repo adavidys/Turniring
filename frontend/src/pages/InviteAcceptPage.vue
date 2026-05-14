@@ -9,7 +9,7 @@
     <div v-if="loading" class="panel">{{ tx("Завантаження запрошення…", "Loading invite…") }}</div>
     <div v-else-if="errorMessage" class="error-box">{{ errorMessage }}</div>
     <section v-else-if="invite" class="panel stack">
-      <h2 class="title-md">{{ tx("Тип", "Type") }}: {{ invite.type === "JURY" ? "JURY" : "TEAM" }}</h2>
+      <h2 class="title-md">{{ tx("Тип", "Type") }}: {{ formatInviteType(invite.type) }}</h2>
       <p class="text-soft" v-if="invite.teamName">{{ tx("Команда", "Team") }}: {{ invite.teamName }} (ID: {{ invite.teamId }})</p>
       <p class="text-soft">{{ tx("Дійсне до", "Valid until") }}: {{ formatDateTime(invite.expiresAt) }}</p>
       <div v-if="invite.used" class="error-box">{{ tx("Це запрошення вже використано.", "This invite has already been used.") }}</div>
@@ -28,7 +28,7 @@
       </div>
 
       <div v-if="accepted" class="success-box">
-        {{ tx("Запрошення прийнято. Поточна роль", "Invite accepted. Current role") }}: {{ accepted.role }}.
+        {{ tx("Запрошення прийнято. Поточна роль", "Invite accepted. Current role") }}: {{ formatRole(accepted.role) }}.
       </div>
       <div class="btn-row" v-if="accepted">
         <RouterLink class="btn-tonal" :to="accepted.type === 'JURY' ? '/jury' : '/team'">
@@ -45,7 +45,7 @@ import { RouterLink, useRoute } from "vue-router";
 import { api } from "../services/api";
 import { authStore } from "../services/auth";
 import { notifier } from "../services/notify";
-import { getErrorMessage, formatDateTime } from "../services/formatters";
+import { formatDateTime, formatInviteType, formatRole, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 
 const route = useRoute();

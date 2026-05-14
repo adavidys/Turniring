@@ -32,12 +32,15 @@
     <template v-else-if="profile">
       <SectionBlock
         :title="tx('Керування роллю', 'Role management')"
-        :description="tx('Змінюйте роль свого акаунта через кастомне меню. Якщо ви вже в команді — зміна ролі недоступна.', 'Change your account role from this panel. If you are already in a team, role change is disabled.')"
+        :description="tx('Змінюйте роль свого акаунта через це меню. Зміна недоступна, якщо ви в команді або маєте незавершені олімпіади.', 'Change your account role from this panel. Role change is disabled while you are in a team or have unfinished olympiads.')"
         :eyebrow="tx('Роль', 'Role')"
       >
         <div class="stack">
           <div v-if="profile.inTeam" class="error-box">
             {{ tx("Ви є учасником команди. Щоб змінити роль, спочатку вийдіть із командного складу.", "You are a team member. Leave the team roster first to change role.") }}
+          </div>
+          <div v-if="hasUnfinishedManagedTournaments" class="error-box">
+            {{ tx("У вас є незавершені олімпіади. Завершіть їх перед зміною ролі.", "You have unfinished olympiads. Finish them before changing role.") }}
           </div>
           <div class="field stack-sm">
             <label>{{ tx("Нова роль", "New role") }}</label>
@@ -49,10 +52,10 @@
                 :class="{ 'is-active': selectedRole === roleOption.value }"
                 type="button"
                 :aria-pressed="selectedRole === roleOption.value"
-                :disabled="profile.inTeam"
+                :disabled="roleChangeBlocked"
                 @click="selectedRole = roleOption.value"
               >
-                <strong>{{ roleOption.value }}</strong>
+                <strong>{{ roleOption.label }}</strong>
                 <span class="text-soft">{{ roleOption.description }}</span>
               </button>
             </div>
@@ -74,7 +77,7 @@
           <button
             class="btn"
             type="button"
-            :disabled="profile.inTeam || changingRole || selectedRole === profile.role"
+            :disabled="roleChangeBlocked || changingRole || selectedRole === profile.role"
             @click="handleRoleChange"
           >
             {{ changingRole ? tx("Зміна ролі…", "Changing role…") : tx("Змінити роль", "Change role") }}
@@ -85,7 +88,7 @@
 
       <SectionBlock :title="tx('Підсумок акаунта', 'Account summary')" :description="tx('Поточна роль і доступ до робочих просторів.', 'Current role and workspace access.')" :eyebrow="tx('Доступ', 'Access')">
         <div class="stat-row">
-          <span class="stat-chip">{{ tx("Роль", "Role") }}: {{ profile.role }}</span>
+          <span class="stat-chip">{{ tx("Роль", "Role") }}: {{ formatRole(profile.role) }}</span>
           <span class="stat-chip">{{ tx("Команд", "Teams") }}: {{ profile.teams.length }}</span>
           <span class="stat-chip">{{ tx("Керованих турнірів", "Managed tournaments") }}: {{ profile.managedTournaments.length }}</span>
           <span class="stat-chip">{{ tx("Призначень журі", "Jury assignments") }}: {{ profile.juryAssignments.length }}</span>
@@ -154,7 +157,7 @@ import StatusBadge from "../components/StatusBadge.vue";
 import TournamentCard from "../components/TournamentCard.vue";
 import { authStore } from "../services/auth";
 import { notifier } from "../services/notify";
-import { getErrorMessage } from "../services/formatters";
+import { formatRole, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 
 const router = useRouter();
@@ -165,9 +168,13 @@ const selectedRole = ref("TEAM");
 const changingRole = ref(false);
 const roleErrorMessage = ref("");
 const roleOptions = computed(() => [
-  { value: "USER", description: tx("Базовий доступ користувача.", "Basic user access.") },
-  { value: "ADMIN", description: tx("Повне адміністрування турнірів.", "Full tournament administration.") }
+  { value: "USER", label: formatRole("USER"), description: tx("Базовий доступ користувача.", "Basic user access.") },
+  { value: "ADMIN", label: formatRole("ADMIN"), description: tx("Повне адміністрування турнірів.", "Full tournament administration.") }
 ]);
+const hasUnfinishedManagedTournaments = computed(() =>
+  Boolean(profile.value?.managedTournaments?.some((tournament) => tournament.status !== "FINISHED"))
+);
+const roleChangeBlocked = computed(() => Boolean(profile.value?.inTeam || hasUnfinishedManagedTournaments.value));
 
 async function loadProfile() {
   loading.value = true;

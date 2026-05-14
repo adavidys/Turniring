@@ -38,7 +38,12 @@ export function formatStatus(value) {
         EVALUATED: "Evaluated",
         SUBMITTED: "Submitted",
         ASSIGNED: "Assigned",
-        COMPLETED: "Completed"
+        COMPLETED: "Completed",
+        USER: "User",
+        TEAM: "Team participant",
+        JURY: "Jury",
+        ADMIN: "Administrator",
+        ORGANIZER: "Organizer"
       }
     : {
         DRAFT: "Чернетка",
@@ -50,7 +55,12 @@ export function formatStatus(value) {
         EVALUATED: "Оцінено",
         SUBMITTED: "Подано",
         ASSIGNED: "Призначено",
-        COMPLETED: "Завершено"
+        COMPLETED: "Завершено",
+        USER: "Користувач",
+        TEAM: "Учасник команди",
+        JURY: "Журі",
+        ADMIN: "Адміністратор",
+        ORGANIZER: "Організатор"
       };
 
   if (translations[status]) {
@@ -70,6 +80,24 @@ export function formatStatus(value) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+export function formatRole(value) {
+  return formatStatus(value);
+}
+
+export function formatInviteType(value) {
+  const type = value || "";
+  const translations = lang.value === "en"
+    ? {
+        JURY: "Jury invite",
+        TEAM: "Team invite"
+      }
+    : {
+        JURY: "Запрошення журі",
+        TEAM: "Запрошення до команди"
+      };
+  return translations[type] || formatStatus(type);
 }
 
 export function getErrorMessage(error) {
@@ -99,7 +127,7 @@ const exactErrorTranslations = new Map([
   ["Insufficient permissions", () => tx("Недостатньо прав доступу.", "Insufficient permissions.")],
   ["Invalid email or password", () => tx("Невірний email або пароль.", "Invalid email or password.")],
   ["User not found", () => tx("Користувача не знайдено.", "User not found.")],
-  ["JURY role can be granted only through invite links", () => tx("Роль JURY надається лише через запрошення.", "JURY role can be granted only through invite links.")],
+  ["JURY role can be granted only through invite links", () => tx("Роль журі надається лише через запрошення.", "Jury access can be granted only through invite links.")],
   ["This link is not active", () => tx("Це посилання неактивне.", "This link is not active.")],
   ["User in team cannot accept jury invite", () => tx("Користувач у команді не може прийняти запрошення журі.", "User in team cannot accept jury invite.")],
   ["Team invite has no team", () => tx("Запрошення до команди не містить команди.", "Team invite has no team.")],
@@ -135,7 +163,13 @@ const exactErrorTranslations = new Map([
   ["Confirmation text must exactly match tournament title", () => tx("Текст підтвердження має точно збігатися з назвою турніру.", "Confirmation text must exactly match tournament title.")],
   ["Admin can create only one olympiad", () => tx("Адміністратор може створити лише одну олімпіаду.", "Admin can create only one olympiad.")],
   ["TEAM role is managed via team pages. Choose USER or ADMIN.", () =>
-    tx("Роль TEAM керується через сторінки команди. Оберіть USER або ADMIN.", "TEAM role is managed via team pages. Choose USER or ADMIN.")
+    tx("Роль учасника команди керується через сторінки команди. Оберіть користувача або адміністратора.", "Team participant access is managed via team pages. Choose user or administrator access.")
+  ],
+  ["Role cannot be changed while user is in an active team", () =>
+    tx("Роль не можна змінити, поки користувач складається в команді.", "Role cannot be changed while user is in an active team.")
+  ],
+  ["Role cannot be changed while user has unfinished olympiads", () =>
+    tx("Роль не можна змінити, поки у користувача є незавершені олімпіади.", "Role cannot be changed while user has unfinished olympiads.")
   ]
 ]);
 

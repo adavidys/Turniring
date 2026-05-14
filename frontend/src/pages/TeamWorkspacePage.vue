@@ -63,7 +63,7 @@
                     <select v-model.number="joinTournamentId">
                       <option :value="null">{{ tx("Оберіть олімпіаду", "Select olympiad") }}</option>
                       <option v-for="tournament in openTournaments" :key="tournament.id" :value="tournament.id">
-                        {{ tournament.title }} · {{ tournament.status }}
+                        {{ tournament.title }} · {{ formatStatus(tournament.status) }}
                       </option>
                     </select>
                   </div>
@@ -208,7 +208,7 @@ import StatusBadge from "../components/StatusBadge.vue";
 import TournamentCard from "../components/TournamentCard.vue";
 import { api } from "../services/api";
 import { notifier } from "../services/notify";
-import { formatDateTime, getErrorMessage } from "../services/formatters";
+import { formatDateTime, formatStatus, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 
 const loading = ref(true);

@@ -38,10 +38,9 @@
             <label>{{ tx("Статус", "Status") }}</label>
             <select v-model="instrumentStatusFilter">
               <option value="ALL">{{ tx("Усі", "All") }}</option>
-              <option value="DRAFT">DRAFT</option>
-              <option value="REGISTRATION">REGISTRATION</option>
-              <option value="RUNNING">RUNNING</option>
-              <option value="FINISHED">FINISHED</option>
+              <option v-for="option in tournamentStatusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
             </select>
           </div>
         </div>
@@ -51,7 +50,7 @@
             <div class="toolbar">
               <div class="stack-sm">
                 <h3 class="title-sm">{{ tournament.title }}</h3>
-                <p class="text-soft">#{{ tournament.id }} · {{ tournament.status }}</p>
+                <p class="text-soft">#{{ tournament.id }} · {{ formatStatus(tournament.status) }}</p>
               </div>
               <StatusBadge :status="tournament.status" />
             </div>
@@ -78,7 +77,7 @@
         <div :class="showJuryInviteTools && showUserInviteTools ? 'split' : 'stack'">
           <div v-if="showJuryInviteTools" class="panel stack">
             <h3 class="title-sm">{{ tx("Запрошення для журі", "Jury invite") }}</h3>
-            <p class="text-soft">{{ tx("Користувач за цим посиланням може перейти в роль JURY.", "A user can switch to JURY role using this link.") }}</p>
+            <p class="text-soft">{{ tx("Користувач за цим посиланням може отримати роль журі.", "A user can become a jury member using this link.") }}</p>
             <div class="btn-row">
               <button class="btn" type="button" :disabled="submitting.createJuryInvite" @click="createJuryInvite">
                 {{ submitting.createJuryInvite ? tx("Генерація…", "Generating…") : t("jury.inviteGenerate") }}
@@ -128,7 +127,7 @@
             <select v-model.number="selectedTournamentId" @change="handleTournamentSelectionChange">
               <option :value="null">{{ t("admin.selectTournament") }}</option>
               <option v-for="tournament in tournaments" :key="tournament.id" :value="tournament.id">
-                {{ tournament.title }} · {{ tournament.status }}
+                {{ tournament.title }} · {{ formatStatus(tournament.status) }}
               </option>
             </select>
           </div>
@@ -149,10 +148,9 @@
                 <div class="field">
                   <label>{{ t("admin.updateStatus") }}</label>
                   <select v-model="tournamentStatus">
-                    <option>DRAFT</option>
-                    <option>REGISTRATION</option>
-                    <option>RUNNING</option>
-                    <option>FINISHED</option>
+                    <option v-for="option in tournamentStatusOptions" :key="option.value" :value="option.value">
+                      {{ option.label }}
+                    </option>
                   </select>
                 </div>
                 <div class="btn-row">
@@ -378,10 +376,9 @@
                   <div class="field">
                     <label>{{ tx("Статус", "Status") }}</label>
                     <select v-model="taskStatusMap[task.id]">
-                      <option>DRAFT</option>
-                      <option>ACTIVE</option>
-                      <option>SUBMISSION_CLOSED</option>
-                      <option>EVALUATED</option>
+                      <option v-for="option in taskStatusOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </option>
                     </select>
                   </div>
                   <div class="field">
@@ -423,7 +420,7 @@
                 >
                   {{ t("jury.repository") }}
                 </a>
-                <span>{{ submission.status }}</span>
+                <span>{{ formatStatus(submission.status) }}</span>
               </div>
             </div>
             <div v-else class="empty-box">{{ tx("Поки що немає подань.", "No submissions yet.") }}</div>
@@ -469,7 +466,7 @@ import StatusBadge from "../components/StatusBadge.vue";
 import { api } from "../services/api";
 import { authStore } from "../services/auth";
 import { notifier } from "../services/notify";
-import { getErrorMessage } from "../services/formatters";
+import { formatStatus, getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
 import { toSafeExternalUrl } from "../services/security";
 
@@ -536,6 +533,16 @@ const taskForm = reactive({
   startAt: defaultDateTime(96),
   deadlineAt: defaultDateTime(144)
 });
+
+const tournamentStatusOptions = computed(() => ["DRAFT", "REGISTRATION", "RUNNING", "FINISHED"].map((value) => ({
+  value,
+  label: formatStatus(value)
+})));
+
+const taskStatusOptions = computed(() => ["DRAFT", "ACTIVE", "SUBMISSION_CLOSED", "EVALUATED"].map((value) => ({
+  value,
+  label: formatStatus(value)
+})));
 
 const selectedTournament = computed(
   () => tournaments.value.find((tournament) => tournament.id === selectedTournamentId.value) || null
