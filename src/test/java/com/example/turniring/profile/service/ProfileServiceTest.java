@@ -118,8 +118,29 @@ class ProfileServiceTest {
         );
 
         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(exception.getReason()).isEqualTo("Role cannot be changed while user is in a team");
+        assertThat(exception.getReason()).isEqualTo("Role cannot be changed while user is in an active team");
         assertThat(currentUser.getRole()).isEqualTo(UserRole.USER);
+        verify(teamService, never()).listMyTeams();
+        verify(tournamentService, never()).listManagedTournaments(anyLong());
+        verify(evaluationService, never()).getAssignmentsForJury(anyLong());
+    }
+
+    @Test
+    void updateMyRoleRejectsSwitchWhenManagerHasUnfinishedOlympiads() {
+        UserEntity currentUser = TestFixtures.user(15L, "admin@example.com", UserRole.ADMIN);
+        when(currentUserService.requireCurrentUser()).thenReturn(currentUser);
+        when(userService.resolveSelfAssignableRole(UserRole.USER, UserRole.ADMIN)).thenReturn(UserRole.USER);
+        when(teamService.isUserInAnyTeam(currentUser)).thenReturn(false);
+        when(tournamentService.hasUnfinishedManagedTournament(15L)).thenReturn(true);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> profileService.updateMyRole(UserRole.USER)
+        );
+
+        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(exception.getReason()).isEqualTo("Role cannot be changed while user has unfinished olympiads");
+        assertThat(currentUser.getRole()).isEqualTo(UserRole.ADMIN);
         verify(teamService, never()).listMyTeams();
         verify(tournamentService, never()).listManagedTournaments(anyLong());
         verify(evaluationService, never()).getAssignmentsForJury(anyLong());

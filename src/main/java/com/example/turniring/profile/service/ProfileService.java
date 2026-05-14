@@ -49,7 +49,13 @@ public class ProfileService {
         if (teamService.isUserInAnyTeam(user)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Role cannot be changed while user is in a team"
+                    "Role cannot be changed while user is in an active team"
+            );
+        }
+        if (isManager(user.getRole()) && tournamentService.hasUnfinishedManagedTournament(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Role cannot be changed while user has unfinished olympiads"
             );
         }
         user.setRole(nextRole);

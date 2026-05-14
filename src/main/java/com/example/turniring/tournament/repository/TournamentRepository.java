@@ -14,4 +14,6 @@ public interface TournamentRepository extends JpaRepository<TournamentEntity, Lo
     List<TournamentEntity> findAllByCreatedByIdOrderByStartAtDesc(Long createdById);
 
     boolean existsByCreatedById(Long createdById);
+
+    boolean existsByCreatedByIdAndStatusNot(Long createdById, TournamentStatus status);
 }

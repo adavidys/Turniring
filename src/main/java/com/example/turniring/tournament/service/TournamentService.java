@@ -160,6 +160,11 @@ public class TournamentService {
     }
 
     @Transactional(readOnly = true)
+    public boolean hasUnfinishedManagedTournament(Long managerId) {
+        return tournamentRepository.existsByCreatedByIdAndStatusNot(managerId, TournamentStatus.FINISHED);
+    }
+
+    @Transactional(readOnly = true)
     public HomeResponse buildHomeResponse() {
         return buildHomeResponse(null);
     }
