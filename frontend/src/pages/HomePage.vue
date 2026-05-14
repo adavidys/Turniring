@@ -90,13 +90,34 @@
     <div v-if="loading" class="panel">{{ t("home.loading") }}</div>
     <div v-else class="page-grid">
       <SectionBlock
+        :title="tx('Рекомендовані олімпіади', 'Recommended olympiads')"
+        :description="tx('Добірка на основі лайків, активності команд і найближчих стартів.', 'Picked by likes, team activity, and upcoming starts.')"
+        :eyebrow="tx('Рекомендації', 'Recommendations')"
+      >
+        <div v-if="home.recommended.length" class="grid-auto">
+          <TournamentCard
+            v-for="tournament in home.recommended"
+            :key="tournament.id"
+            :tournament="tournament"
+            @like-change="updateTournament"
+          />
+        </div>
+        <div v-else class="empty-box">{{ tx("Поки що недостатньо даних для рекомендацій.", "Not enough data for recommendations yet.") }}</div>
+      </SectionBlock>
+
+      <SectionBlock
         v-if="filters.registration"
         :title="t('home.section.registrationTitle')"
         :description="t('home.section.registrationDesc')"
         :eyebrow="t('home.section.registrationEyebrow')"
       >
         <div v-if="filteredRegistration.length" class="grid-auto">
-          <TournamentCard v-for="tournament in filteredRegistration" :key="tournament.id" :tournament="tournament" />
+          <TournamentCard
+            v-for="tournament in filteredRegistration"
+            :key="tournament.id"
+            :tournament="tournament"
+            @like-change="updateTournament"
+          />
         </div>
         <div v-else class="empty-box">{{ t("empty.registration") }}</div>
       </SectionBlock>
@@ -108,7 +129,12 @@
         :eyebrow="t('home.section.runningEyebrow')"
       >
         <div v-if="filteredRunning.length" class="grid-auto">
-          <TournamentCard v-for="tournament in filteredRunning" :key="tournament.id" :tournament="tournament" />
+          <TournamentCard
+            v-for="tournament in filteredRunning"
+            :key="tournament.id"
+            :tournament="tournament"
+            @like-change="updateTournament"
+          />
         </div>
         <div v-else class="empty-box">{{ t("empty.running") }}</div>
       </SectionBlock>
@@ -120,7 +146,12 @@
         :eyebrow="t('home.section.finishedEyebrow')"
       >
         <div v-if="filteredFinished.length" class="grid-auto">
-          <TournamentCard v-for="tournament in filteredFinished" :key="tournament.id" :tournament="tournament" />
+          <TournamentCard
+            v-for="tournament in filteredFinished"
+            :key="tournament.id"
+            :tournament="tournament"
+            @like-change="updateTournament"
+          />
         </div>
         <div v-else class="empty-box">{{ t("empty.finished") }}</div>
       </SectionBlock>
@@ -142,6 +173,7 @@ import { toSafeExternalUrl } from "../services/security";
 
 const loading = ref(true);
 const home = reactive({
+  recommended: [],
   registrationOpen: [],
   running: [],
   finished: []
@@ -220,6 +252,15 @@ async function loadHome() {
     notifier.pushNotification(getErrorMessage(error), "error");
   } finally {
     loading.value = false;
+  }
+}
+
+function updateTournament(updatedTournament) {
+  for (const key of ["recommended", "registrationOpen", "running", "finished"]) {
+    const index = home[key].findIndex((tournament) => tournament.id === updatedTournament.id);
+    if (index >= 0) {
+      home[key][index] = updatedTournament;
+    }
   }
 }
 

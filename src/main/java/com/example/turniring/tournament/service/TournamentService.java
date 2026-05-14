@@ -12,7 +12,9 @@ import com.example.turniring.team.entity.TeamEntity;
 import com.example.turniring.team.repository.TeamRepository;
 import com.example.turniring.tournament.dto.*;
 import com.example.turniring.tournament.entity.TournamentEntity;
+import com.example.turniring.tournament.entity.TournamentLikeEntity;
 import com.example.turniring.tournament.entity.TournamentStatus;
+import com.example.turniring.tournament.repository.TournamentLikeRepository;
 import com.example.turniring.tournament.repository.TournamentRepository;
 import com.example.turniring.user.entity.UserEntity;
 import com.example.turniring.user.entity.UserRole;
@@ -24,6 +26,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -38,6 +42,7 @@ public class TournamentService {
     private final SubmissionRepository submissionRepository;
     private final EvaluationAssignmentRepository evaluationAssignmentRepository;
     private final EvaluationRepository evaluationRepository;
+    private final TournamentLikeRepository tournamentLikeRepository;
     private final Clock clock;
 
     @Transactional
@@ -112,6 +117,7 @@ public class TournamentService {
         taskRepository.deleteAllByTournamentId(tournamentId);
         announcementRepository.deleteAllByTournamentId(tournamentId);
         scheduleEventRepository.deleteAllByTournamentId(tournamentId);
+        tournamentLikeRepository.deleteAllByTournamentId(tournamentId);
         tournamentRepository.delete(tournament);
     }
 
@@ -123,16 +129,26 @@ public class TournamentService {
 
     @Transactional(readOnly = true)
     public TournamentResponse getTournament(Long tournamentId) {
-        return toResponse(getTournamentEntity(tournamentId));
+        return getTournament(tournamentId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public TournamentResponse getTournament(Long tournamentId, UserEntity currentUser) {
+        return toResponse(getTournamentEntity(tournamentId), currentUser);
     }
 
     @Transactional(readOnly = true)
     public List<TournamentResponse> listTournaments(TournamentStatus status) {
+        return listTournaments(status, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TournamentResponse> listTournaments(TournamentStatus status, UserEntity currentUser) {
         List<TournamentEntity> tournaments = status == null
                 ? tournamentRepository.findAll()
                 : tournamentRepository.findAllByStatusOrderByStartAtAsc(status);
         return tournaments.stream()
-                .map(this::toResponse)
+                .map(tournament -> toResponse(tournament, currentUser))
                 .toList();
     }
 
@@ -145,13 +161,40 @@ public class TournamentService {
 
     @Transactional(readOnly = true)
     public HomeResponse buildHomeResponse() {
+        return buildHomeResponse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public HomeResponse buildHomeResponse(UserEntity currentUser) {
         return new HomeResponse(
-                listTournaments(TournamentStatus.REGISTRATION).stream()
+                recommendTournaments(currentUser),
+                listTournaments(TournamentStatus.REGISTRATION, currentUser).stream()
                         .filter(TournamentResponse::registrationOpen)
                         .toList(),
-                listTournaments(TournamentStatus.RUNNING),
-                listTournaments(TournamentStatus.FINISHED)
+                listTournaments(TournamentStatus.RUNNING, currentUser),
+                listTournaments(TournamentStatus.FINISHED, currentUser)
         );
+    }
+
+    @Transactional
+    public TournamentResponse likeTournament(Long tournamentId, UserEntity user) {
+        TournamentEntity tournament = getTournamentEntity(tournamentId);
+        if (!tournamentLikeRepository.existsByTournamentIdAndUserId(tournamentId, user.getId())) {
+            tournamentLikeRepository.save(TournamentLikeEntity.builder()
+                    .tournament(tournament)
+                    .user(user)
+                    .createdAt(LocalDateTime.now(clock))
+                    .build());
+        }
+        return toResponse(tournament, user);
+    }
+
+    @Transactional
+    public TournamentResponse unlikeTournament(Long tournamentId, UserEntity user) {
+        TournamentEntity tournament = getTournamentEntity(tournamentId);
+        tournamentLikeRepository.findByTournamentIdAndUserId(tournamentId, user.getId())
+                .ifPresent(tournamentLikeRepository::delete);
+        return toResponse(tournament, user);
     }
 
     @Transactional
@@ -218,13 +261,50 @@ public class TournamentService {
     }
 
     public TournamentResponse toResponse(TournamentEntity tournament) {
+        return toResponse(tournament, null);
+    }
+
+    public TournamentResponse toResponse(TournamentEntity tournament, UserEntity currentUser) {
         long registeredTeams = teamRepository.countByTournamentId(tournament.getId());
+        long likeCount = tournamentLikeRepository.countByTournamentId(tournament.getId());
+        boolean likedByCurrentUser = currentUser != null
+                && tournamentLikeRepository.existsByTournamentIdAndUserId(tournament.getId(), currentUser.getId());
         return TournamentResponse.from(
                 tournament,
                 registeredTeams,
+                likeCount,
+                likedByCurrentUser,
                 isRegistrationOpen(tournament),
                 areTeamsVisible(tournament)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<TournamentResponse> recommendTournaments(UserEntity currentUser) {
+        return tournamentRepository.findAll().stream()
+                .filter(tournament -> tournament.getStatus() != TournamentStatus.DRAFT)
+                .map(tournament -> toResponse(tournament, currentUser))
+                .sorted(Comparator.comparingDouble(this::recommendationScore).reversed())
+                .limit(6)
+                .toList();
+    }
+
+    private double recommendationScore(TournamentResponse tournament) {
+        double statusScore = switch (tournament.status()) {
+            case REGISTRATION -> tournament.registrationOpen() ? 100 : 55;
+            case RUNNING -> 45;
+            case FINISHED -> 8;
+            case DRAFT -> -100;
+        };
+        double popularityScore = tournament.likeCount() * 12 + tournament.registeredTeams() * 2;
+        double startScore = 0;
+        if (tournament.startAt() != null) {
+            long daysUntilStart = ChronoUnit.DAYS.between(LocalDateTime.now(clock), tournament.startAt());
+            if (daysUntilStart >= 0 && daysUntilStart <= 30) {
+                startScore = 30 - daysUntilStart;
+            }
+        }
+        return statusScore + popularityScore + startScore;
     }
 
     private void validateTournamentRequest(TournamentRequest request) {

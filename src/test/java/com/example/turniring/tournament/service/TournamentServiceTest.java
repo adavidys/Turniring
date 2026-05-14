@@ -2,14 +2,20 @@ package com.example.turniring.tournament.service;
 
 import com.example.turniring.announcement.entity.AnnouncementEntity;
 import com.example.turniring.announcement.repository.AnnouncementRepository;
+import com.example.turniring.evaluation.repository.EvaluationAssignmentRepository;
+import com.example.turniring.evaluation.repository.EvaluationRepository;
 import com.example.turniring.schedule.repository.ScheduleEventRepository;
+import com.example.turniring.submission.repository.SubmissionRepository;
 import com.example.turniring.support.TestFixtures;
+import com.example.turniring.task.repository.TaskRepository;
 import com.example.turniring.team.repository.TeamRepository;
 import com.example.turniring.tournament.dto.AnnouncementRequest;
 import com.example.turniring.tournament.dto.TournamentRequest;
 import com.example.turniring.tournament.dto.TournamentResponse;
 import com.example.turniring.tournament.entity.TournamentEntity;
+import com.example.turniring.tournament.entity.TournamentLikeEntity;
 import com.example.turniring.tournament.entity.TournamentStatus;
+import com.example.turniring.tournament.repository.TournamentLikeRepository;
 import com.example.turniring.tournament.repository.TournamentRepository;
 import com.example.turniring.user.entity.UserEntity;
 import com.example.turniring.user.entity.UserRole;
@@ -41,6 +47,16 @@ class TournamentServiceTest {
     private AnnouncementRepository announcementRepository;
     @Mock
     private ScheduleEventRepository scheduleEventRepository;
+    @Mock
+    private TaskRepository taskRepository;
+    @Mock
+    private SubmissionRepository submissionRepository;
+    @Mock
+    private EvaluationAssignmentRepository evaluationAssignmentRepository;
+    @Mock
+    private EvaluationRepository evaluationRepository;
+    @Mock
+    private TournamentLikeRepository tournamentLikeRepository;
 
     private TournamentService tournamentService;
     private Clock clock;
@@ -55,6 +71,11 @@ class TournamentServiceTest {
                 teamRepository,
                 announcementRepository,
                 scheduleEventRepository,
+                taskRepository,
+                submissionRepository,
+                evaluationAssignmentRepository,
+                evaluationRepository,
+                tournamentLikeRepository,
                 clock
         );
     }
@@ -96,12 +117,39 @@ class TournamentServiceTest {
                 admin
         );
         when(teamRepository.countByTournamentId(5L)).thenReturn(3L);
+        when(tournamentLikeRepository.countByTournamentId(5L)).thenReturn(7L);
+        when(tournamentLikeRepository.existsByTournamentIdAndUserId(5L, admin.getId())).thenReturn(true);
 
-        TournamentResponse response = tournamentService.toResponse(tournament);
+        TournamentResponse response = tournamentService.toResponse(tournament, admin);
 
         assertThat(response.registrationOpen()).isTrue();
         assertThat(response.teamsVisible()).isFalse();
         assertThat(response.registeredTeams()).isEqualTo(3L);
+        assertThat(response.likeCount()).isEqualTo(7L);
+        assertThat(response.likedByCurrentUser()).isTrue();
+    }
+
+    @Test
+    void likeTournamentCreatesLikeOnceAndReturnsUpdatedState() {
+        UserEntity user = TestFixtures.user(2L, "user@example.com", UserRole.USER);
+        TournamentEntity tournament = TestFixtures.tournament(
+                12L,
+                TournamentStatus.REGISTRATION,
+                now.minusHours(1),
+                now.plusHours(2),
+                false,
+                TestFixtures.user(1L, "admin@example.com", UserRole.ADMIN)
+        );
+
+        when(tournamentRepository.findById(12L)).thenReturn(Optional.of(tournament));
+        when(tournamentLikeRepository.existsByTournamentIdAndUserId(12L, 2L)).thenReturn(false, true);
+        when(tournamentLikeRepository.countByTournamentId(12L)).thenReturn(1L);
+
+        TournamentResponse response = tournamentService.likeTournament(12L, user);
+
+        verify(tournamentLikeRepository).save(any(TournamentLikeEntity.class));
+        assertThat(response.likeCount()).isEqualTo(1L);
+        assertThat(response.likedByCurrentUser()).isTrue();
     }
 
     @Test

@@ -187,7 +187,10 @@ export const api = {
   public: {
     home: () => request("/api/public/home"),
     tournaments: (status) => request(status ? `/api/public/tournaments?status=${status}` : "/api/public/tournaments"),
+    recommendedTournaments: () => request("/api/public/tournaments/recommended"),
     tournament: (id) => request(`/api/public/tournaments/${id}`),
+    likeTournament: (id) => request(`/api/public/tournaments/${id}/like`, { method: "POST" }),
+    unlikeTournament: (id) => request(`/api/public/tournaments/${id}/like`, { method: "DELETE" }),
     teams: (id) => request(`/api/public/tournaments/${id}/teams`),
     invite: (token) => request(`/api/public/invites/${token}`),
     tasks: (id) => request(`/api/public/tournaments/${id}/tasks`),

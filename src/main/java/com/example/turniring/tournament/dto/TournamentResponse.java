@@ -20,12 +20,16 @@ public record TournamentResponse(
         boolean hideTeamsUntilRegistrationEnds,
         TournamentStatus status,
         long registeredTeams,
+        long likeCount,
+        boolean likedByCurrentUser,
         boolean registrationOpen,
         boolean teamsVisible
 ) {
     public static TournamentResponse from(
             TournamentEntity tournament,
             long registeredTeams,
+            long likeCount,
+            boolean likedByCurrentUser,
             boolean registrationOpen,
             boolean teamsVisible
     ) {
@@ -44,6 +48,8 @@ public record TournamentResponse(
                 tournament.isHideTeamsUntilRegistrationEnds(),
                 tournament.getStatus(),
                 registeredTeams,
+                likeCount,
+                likedByCurrentUser,
                 registrationOpen,
                 teamsVisible
         );

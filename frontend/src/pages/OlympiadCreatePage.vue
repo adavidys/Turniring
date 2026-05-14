@@ -163,7 +163,7 @@
         <div class="stack-sm">
           <h3 class="title-sm">{{ tx("Прев’ю олімпіади", "Olympiad preview") }}</h3>
           <div style="pointer-events: none;">
-            <TournamentCard :tournament="previewTournament" />
+            <TournamentCard :tournament="previewTournament" :show-actions="false" />
           </div>
         </div>
 
@@ -194,7 +194,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 import MarkdownEditorField from "../components/MarkdownEditorField.vue";
 import SectionBlock from "../components/SectionBlock.vue";
@@ -203,6 +203,24 @@ import { api } from "../services/api";
 import { notifier } from "../services/notify";
 import { getErrorMessage } from "../services/formatters";
 import { t, tx } from "../services/i18n";
+
+const DRAFT_STORAGE_KEY = "turniring.olympiadCreateDraft.v1";
+const FORM_FIELDS = [
+  "title",
+  "description",
+  "rules",
+  "startDate",
+  "startTime",
+  "registrationStartDate",
+  "registrationStartTime",
+  "registrationEndDate",
+  "registrationEndTime",
+  "maxTeams",
+  "minimumRounds",
+  "teamMinMembers",
+  "teamMaxMembers",
+  "hideTeamsUntilRegistrationEnds"
+];
 
 const submitting = ref(false);
 const message = ref("");
@@ -237,6 +255,16 @@ const form = reactive({
   teamMaxMembers: 5,
   hideTeamsUntilRegistrationEnds: false
 });
+
+restoreDraft();
+
+watch(
+  [form, currentStep, attemptedSteps],
+  () => {
+    saveDraft();
+  },
+  { deep: true }
+);
 
 const dateTimeValues = computed(() => ({
   startAt: toDateTime(form.startDate, form.startTime),
@@ -443,6 +471,7 @@ async function createOlympiad() {
     });
     createdOlympiad.value = created;
     message.value = t("admin.tournamentCreated");
+    clearDraft();
     notifier.pushNotification(t("admin.tournamentCreated"), "success");
   } catch (error) {
     errorMessage.value = getErrorMessage(error);
@@ -510,5 +539,67 @@ function hasVisibleStepError(step) {
 function isPositiveInteger(value) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 1;
+}
+
+function restoreDraft() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const rawDraft = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+  if (!rawDraft) {
+    return;
+  }
+
+  try {
+    const draft = JSON.parse(rawDraft);
+    if (draft?.form && typeof draft.form === "object") {
+      for (const field of FORM_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(draft.form, field)) {
+          form[field] = draft.form[field];
+        }
+      }
+    }
+
+    const savedStep = Number(draft?.currentStep);
+    if (Number.isInteger(savedStep)) {
+      currentStep.value = Math.max(1, Math.min(4, savedStep));
+    }
+
+    if (draft?.attemptedSteps && typeof draft.attemptedSteps === "object") {
+      for (const step of [1, 2, 3]) {
+        attemptedSteps[step] = Boolean(draft.attemptedSteps[step]);
+      }
+    }
+  } catch {
+    window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+  }
+}
+
+function saveDraft() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        form: Object.fromEntries(FORM_FIELDS.map((field) => [field, form[field]])),
+        currentStep: currentStep.value,
+        attemptedSteps: { ...attemptedSteps },
+        savedAt: new Date().toISOString()
+      })
+    );
+  } catch {
+    // Draft persistence is best-effort; form submission must keep working.
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(DRAFT_STORAGE_KEY);
 }
 </script>

@@ -15,12 +15,16 @@
             <RouterLink v-if="canEditTournament" class="btn-tonal" :to="`/admin?tournamentId=${tournament.id}`">
               {{ t("admin.editTournament") }}
             </RouterLink>
+            <button class="btn-ghost" type="button" :disabled="submittingLike" @click="toggleTournamentLike">
+              {{ tournament.likedByCurrentUser ? tx("Прибрати лайк", "Unlike") : tx("Лайк", "Like") }}
+            </button>
           </div>
         </div>
 
         <div class="stat-row">
           <span class="stat-chip">{{ t("tournament.registrationLabel") }} {{ tournament.registrationOpen ? t("tournament.registrationOpen") : t("tournament.registrationClosed") }}</span>
           <span class="stat-chip">{{ tournament.registeredTeams }} {{ t("tournament.teams") }}</span>
+          <span class="stat-chip">{{ tournament.likeCount || 0 }} {{ tx("лайків", "likes") }}</span>
           <span class="stat-chip">{{ tournament.minimumRounds }} {{ t("tournament.rounds") }}</span>
           <span class="stat-chip">{{ tournament.teamMinMembers }}–{{ tournament.teamMaxMembers }} {{ tx("учасників", "members") }}</span>
         </div>
@@ -205,6 +209,7 @@ const props = defineProps({
 const loading = ref(true);
 const errorMessage = ref("");
 const registeringTeam = ref(false);
+const submittingLike = ref(false);
 const loadingMyTeams = ref(false);
 const registrationError = ref("");
 const registrationMessage = ref("");
@@ -284,6 +289,27 @@ async function handleTeamRegistration() {
     registrationError.value = getErrorMessage(error);
   } finally {
     registeringTeam.value = false;
+  }
+}
+
+async function toggleTournamentLike() {
+  if (!authStore.isLoggedIn.value) {
+    notifier.pushNotification(tx("Увійдіть, щоб лайкати олімпіади.", "Sign in to like olympiads."), "error");
+    return;
+  }
+  if (!tournament.value) {
+    return;
+  }
+
+  submittingLike.value = true;
+  try {
+    tournament.value = tournament.value.likedByCurrentUser
+      ? await api.public.unlikeTournament(tournament.value.id)
+      : await api.public.likeTournament(tournament.value.id);
+  } catch (error) {
+    notifier.pushNotification(getErrorMessage(error), "error");
+  } finally {
+    submittingLike.value = false;
   }
 }
 

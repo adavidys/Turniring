@@ -36,7 +36,6 @@ public class JwtFilter extends OncePerRequestFilter {
     );
 
     private static final List<String> PUBLIC_PATH_PREFIXES = List.of(
-            "/api/public/",
             "/swagger-ui",
             "/v3/api-docs",
             "/actuator/health",
