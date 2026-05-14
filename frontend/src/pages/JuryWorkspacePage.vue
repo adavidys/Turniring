@@ -62,7 +62,11 @@
               </div>
               <div class="field">
                 <label>{{ t("jury.comment") }}</label>
-                <textarea v-model="forms[assignment.assignmentId].comment"></textarea>
+                <MarkdownEditorField
+                  v-model="forms[assignment.assignmentId].comment"
+                  :label="t('jury.comment')"
+                  :button-text="tx('Редагувати коментар у Markdown', 'Edit comment in Markdown')"
+                />
               </div>
             </div>
 
@@ -85,6 +89,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
+import MarkdownEditorField from "../components/MarkdownEditorField.vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 import { api } from "../services/api";

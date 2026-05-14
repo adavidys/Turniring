@@ -173,7 +173,11 @@
                   </div>
                   <div class="field">
                     <label>{{ t("team.summary") }}</label>
-                    <textarea v-model="submissionForms[task.id].summary"></textarea>
+                    <MarkdownEditorField
+                      v-model="submissionForms[task.id].summary"
+                      :label="t('team.summary')"
+                      :button-text="tx('Редагувати summary у Markdown', 'Edit summary in Markdown')"
+                    />
                   </div>
                 </div>
 
@@ -198,6 +202,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { RouterLink } from "vue-router";
+import MarkdownEditorField from "../components/MarkdownEditorField.vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 import TournamentCard from "../components/TournamentCard.vue";

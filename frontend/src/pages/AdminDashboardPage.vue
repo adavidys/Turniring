@@ -1,5 +1,5 @@
 <template>
-  <div class="page-grid">
+  <div class="page-grid admin-page">
     <section class="hero-card stack">
       <span class="eyebrow">{{ t("admin.dashboard") }}</span>
       <div class="toolbar">
@@ -139,162 +139,179 @@
         </div>
 
         <template v-if="selectedTournament">
-          <div class="split">
-            <div class="panel stack">
-              <div class="toolbar">
-                <h3 class="title-sm">{{ selectedTournament.title }}</h3>
-                <StatusBadge :status="selectedTournament.status" />
-              </div>
-              <div class="field">
-                <label>{{ t("admin.updateStatus") }}</label>
-                <select v-model="tournamentStatus">
-                  <option>DRAFT</option>
-                  <option>REGISTRATION</option>
-                  <option>RUNNING</option>
-                  <option>FINISHED</option>
-                </select>
-              </div>
-              <div class="btn-row">
-                <button class="btn" type="button" @click="updateTournamentStatus" :disabled="submitting.updateStatus">
-                  {{ submitting.updateStatus ? tx("Оновлення…", "Updating…") : t("admin.applyStatus") }}
-                </button>
-              </div>
-            </div>
-
-            <div class="panel stack">
-              <h3 class="title-sm">{{ t("admin.editTournament") }}</h3>
-              <form class="stack" @submit.prevent="updateTournamentDetails">
-                <div class="field-grid">
-                  <div class="field">
-                    <label>{{ t("olympiad.form.title") }}</label>
-                    <input v-model="editForm.title" type="text" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.start") }}</label>
-                    <input v-model="editForm.startAt" type="datetime-local" />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.registrationStart") }}</label>
-                    <input v-model="editForm.registrationStartAt" type="datetime-local" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.registrationEnd") }}</label>
-                    <input v-model="editForm.registrationEndAt" type="datetime-local" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.maxTeams") }}</label>
-                    <input v-model.number="editForm.maxTeams" type="number" min="1" />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.minimumRounds") }}</label>
-                    <input v-model.number="editForm.minimumRounds" type="number" min="1" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.teamMin") }}</label>
-                    <input v-model.number="editForm.teamMinMembers" type="number" min="1" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.teamMax") }}</label>
-                    <input v-model.number="editForm.teamMaxMembers" type="number" min="1" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.rules") }}</label>
-                    <textarea v-model="editForm.rules"></textarea>
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.description") }}</label>
-                    <textarea v-model="editForm.description" required></textarea>
-                  </div>
+          <div class="split admin-split">
+            <div class="stack admin-left-column">
+              <div class="panel stack">
+                <div class="toolbar">
+                  <h3 class="title-sm">{{ selectedTournament.title }}</h3>
+                  <StatusBadge :status="selectedTournament.status" />
                 </div>
-
                 <div class="field">
-                  <label>
-                    <input v-model="editForm.hideTeamsUntilRegistrationEnds" type="checkbox" />
-                    {{ t("olympiad.form.hideTeams") }}
-                  </label>
+                  <label>{{ t("admin.updateStatus") }}</label>
+                  <select v-model="tournamentStatus">
+                    <option>DRAFT</option>
+                    <option>REGISTRATION</option>
+                    <option>RUNNING</option>
+                    <option>FINISHED</option>
+                  </select>
                 </div>
-
                 <div class="btn-row">
-                  <button class="btn" type="submit" :disabled="submitting.updateTournament">
-                    {{ submitting.updateTournament ? tx("Збереження…", "Saving…") : t("admin.saveChanges") }}
-                  </button>
-                </div>
-              </form>
-
-              <div class="admin-danger-zone stack">
-                <h4 class="title-sm">{{ t("admin.deleteDangerTitle") }}</h4>
-                <p class="text-soft">{{ t("admin.deleteDangerCopy") }}</p>
-                <div class="field">
-                  <label>{{ t("admin.deleteConfirmLabel") }}</label>
-                  <input v-model.trim="deleteConfirmationText" type="text" :placeholder="t('admin.deleteTypeTitle')" />
-                </div>
-                <div class="error-box" v-if="errors.deleteTournament">{{ errors.deleteTournament }}</div>
-                <div class="btn-row">
-                  <button
-                    class="btn-danger"
-                    type="button"
-                    :disabled="submitting.deleteTournament || !canDeleteSelectedTournament"
-                    @click="deleteTournament"
-                  >
-                    {{ submitting.deleteTournament ? tx("Видалення…", "Deleting…") : t("admin.deleteAction") }}
+                  <button class="btn" type="button" @click="updateTournamentStatus" :disabled="submitting.updateStatus">
+                    {{ submitting.updateStatus ? tx("Оновлення…", "Updating…") : t("admin.applyStatus") }}
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="split">
-            <div class="panel stack">
-              <h3 class="title-sm">{{ t("admin.announcement") }}</h3>
-              <form class="stack" @submit.prevent="createAnnouncement">
-                <div class="field">
-                  <label>{{ t("olympiad.form.title") }}</label>
-                  <input v-model="announcementForm.title" type="text" required />
-                </div>
-                <div class="field">
-                  <label>{{ tx("Вміст", "Content") }}</label>
-                  <textarea v-model="announcementForm.content" required></textarea>
-                </div>
-                <button class="btn" type="submit" :disabled="submitting.announcement">
-                  {{ submitting.announcement ? tx("Публікація…", "Publishing…") : t("admin.publish") }}
-                </button>
-              </form>
-            </div>
-          </div>
-
-          <div class="split">
-            <div class="panel stack">
-              <h3 class="title-sm">{{ t("admin.scheduleEvent") }}</h3>
-              <form class="stack" @submit.prevent="createScheduleEvent">
-                <div class="field-grid">
+              <div class="panel stack">
+                <h3 class="title-sm">{{ t("admin.announcement") }}</h3>
+                <form class="stack" @submit.prevent="createAnnouncement">
                   <div class="field">
                     <label>{{ t("olympiad.form.title") }}</label>
-                    <input v-model="scheduleForm.title" type="text" required />
+                    <input v-model="announcementForm.title" type="text" required />
                   </div>
                   <div class="field">
-                    <label>{{ t("jury.inviteLink") }}</label>
-                    <input v-model="scheduleForm.link" type="url" />
+                    <label>{{ tx("Вміст", "Content") }}</label>
+                    <MarkdownEditorField
+                      v-model="announcementForm.content"
+                      :label="tx('Вміст', 'Content')"
+                      :button-text="tx('Редагувати вміст у Markdown', 'Edit content in Markdown')"
+                    />
                   </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.start") }}</label>
-                    <input v-model="scheduleForm.startAt" type="datetime-local" required />
+                  <button class="btn" type="submit" :disabled="submitting.announcement">
+                    {{ submitting.announcement ? tx("Публікація…", "Publishing…") : t("admin.publish") }}
+                  </button>
+                </form>
+              </div>
+
+              <div class="panel stack">
+                <h3 class="title-sm">{{ t("admin.scheduleEvent") }}</h3>
+                <form class="stack" @submit.prevent="createScheduleEvent">
+                  <div class="field-grid">
+                    <div class="field">
+                      <label>{{ t("olympiad.form.title") }}</label>
+                      <input v-model="scheduleForm.title" type="text" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("jury.inviteLink") }}</label>
+                      <input v-model="scheduleForm.link" type="url" />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.start") }}</label>
+                      <input v-model="scheduleForm.startAt" type="datetime-local" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ tx("Кінець", "End") }}</label>
+                      <input v-model="scheduleForm.endAt" type="datetime-local" required />
+                    </div>
+                    <div class="field field-wide">
+                      <label>{{ t("olympiad.form.description") }}</label>
+                      <MarkdownEditorField
+                        v-model="scheduleForm.description"
+                        :label="t('olympiad.form.description')"
+                        :button-text="tx('Редагувати опис у Markdown', 'Edit description in Markdown')"
+                      />
+                    </div>
                   </div>
-                  <div class="field">
-                    <label>{{ tx("Кінець", "End") }}</label>
-                    <input v-model="scheduleForm.endAt" type="datetime-local" required />
-                  </div>
-                  <div class="field">
-                    <label>{{ t("olympiad.form.description") }}</label>
-                    <textarea v-model="scheduleForm.description"></textarea>
-                  </div>
-                </div>
-                <button class="btn" type="submit" :disabled="submitting.schedule">
-                  {{ submitting.schedule ? tx("Збереження…", "Saving…") : tx("Створити подію", "Create event") }}
-                </button>
-              </form>
+                  <button class="btn" type="submit" :disabled="submitting.schedule">
+                    {{ submitting.schedule ? tx("Збереження…", "Saving…") : tx("Створити подію", "Create event") }}
+                  </button>
+                </form>
+              </div>
             </div>
 
-            <div class="panel stack">
+            <div class="stack admin-right-column">
+              <div class="panel stack">
+                <h3 class="title-sm">{{ t("admin.editTournament") }}</h3>
+                <form class="stack" @submit.prevent="updateTournamentDetails">
+                  <div class="field-grid">
+                    <div class="field">
+                      <label>{{ t("olympiad.form.title") }}</label>
+                      <input v-model="editForm.title" type="text" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.start") }}</label>
+                      <input v-model="editForm.startAt" type="datetime-local" />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.registrationStart") }}</label>
+                      <input v-model="editForm.registrationStartAt" type="datetime-local" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.registrationEnd") }}</label>
+                      <input v-model="editForm.registrationEndAt" type="datetime-local" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.maxTeams") }}</label>
+                      <input v-model.number="editForm.maxTeams" type="number" min="1" />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.minimumRounds") }}</label>
+                      <input v-model.number="editForm.minimumRounds" type="number" min="1" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.teamMin") }}</label>
+                      <input v-model.number="editForm.teamMinMembers" type="number" min="1" required />
+                    </div>
+                    <div class="field">
+                      <label>{{ t("olympiad.form.teamMax") }}</label>
+                      <input v-model.number="editForm.teamMaxMembers" type="number" min="1" required />
+                    </div>
+                    <div class="field field-wide">
+                      <label>{{ t("olympiad.form.rules") }}</label>
+                      <MarkdownEditorField
+                        v-model="editForm.rules"
+                        :label="t('olympiad.form.rules')"
+                        :button-text="tx('Редагувати правила у Markdown', 'Edit rules in Markdown')"
+                      />
+                    </div>
+                    <div class="field field-wide">
+                      <label>{{ t("olympiad.form.description") }}</label>
+                      <MarkdownEditorField
+                        v-model="editForm.description"
+                        :label="t('olympiad.form.description')"
+                        :button-text="tx('Редагувати опис у Markdown', 'Edit description in Markdown')"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label>
+                      <input v-model="editForm.hideTeamsUntilRegistrationEnds" type="checkbox" />
+                      {{ t("olympiad.form.hideTeams") }}
+                    </label>
+                  </div>
+
+                  <div class="btn-row">
+                    <button class="btn" type="submit" :disabled="submitting.updateTournament">
+                      {{ submitting.updateTournament ? tx("Збереження…", "Saving…") : t("admin.saveChanges") }}
+                    </button>
+                  </div>
+                </form>
+
+                <div class="admin-danger-zone stack">
+                  <h4 class="title-sm">{{ t("admin.deleteDangerTitle") }}</h4>
+                  <p class="text-soft">{{ t("admin.deleteDangerCopy") }}</p>
+                  <div class="field">
+                    <label>{{ t("admin.deleteConfirmLabel") }}</label>
+                    <input v-model.trim="deleteConfirmationText" type="text" :placeholder="t('admin.deleteTypeTitle')" />
+                  </div>
+                  <div class="error-box" v-if="errors.deleteTournament">{{ errors.deleteTournament }}</div>
+                  <div class="btn-row">
+                    <button
+                      class="btn-danger"
+                      type="button"
+                      :disabled="submitting.deleteTournament || !canDeleteSelectedTournament"
+                      @click="deleteTournament"
+                    >
+                      {{ submitting.deleteTournament ? tx("Видалення…", "Deleting…") : t("admin.deleteAction") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="panel stack admin-span-two">
               <h3 class="title-sm">{{ t("admin.createTask") }}</h3>
               <form class="stack" @submit.prevent="createTask">
                 <div class="field-grid">
@@ -314,17 +331,29 @@
                     <label>{{ t("team.deadline") }}</label>
                     <input v-model="taskForm.deadlineAt" type="datetime-local" required />
                   </div>
-                  <div class="field">
+                  <div class="field field-wide">
                     <label>{{ tx("Технологічні вимоги", "Technology requirements") }}</label>
-                    <textarea v-model="taskForm.technologyRequirements"></textarea>
+                    <MarkdownEditorField
+                      v-model="taskForm.technologyRequirements"
+                      :label="tx('Технологічні вимоги', 'Technology requirements')"
+                      :button-text="tx('Редагувати вимоги у Markdown', 'Edit requirements in Markdown')"
+                    />
                   </div>
-                  <div class="field">
+                  <div class="field field-wide">
                     <label>{{ t("olympiad.form.description") }}</label>
-                    <textarea v-model="taskForm.description" required></textarea>
+                    <MarkdownEditorField
+                      v-model="taskForm.description"
+                      :label="t('olympiad.form.description')"
+                      :button-text="tx('Редагувати опис у Markdown', 'Edit description in Markdown')"
+                    />
                   </div>
-                  <div class="field">
+                  <div class="field field-wide">
                     <label>{{ tx("Обов'язкові критерії (по одному в рядку)", "Must-have criteria (one per line)") }}</label>
-                    <textarea v-model="taskForm.mustHaveText"></textarea>
+                    <MarkdownEditorField
+                      v-model="taskForm.mustHaveText"
+                      :label="tx(`Обов'язкові критерії (по одному в рядку)`, 'Must-have criteria (one per line)')"
+                      :button-text="tx('Редагувати критерії у Markdown', 'Edit criteria in Markdown')"
+                    />
                   </div>
                 </div>
                 <button class="btn" type="submit" :disabled="submitting.task">
@@ -434,6 +463,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
+import MarkdownEditorField from "../components/MarkdownEditorField.vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 import { api } from "../services/api";
@@ -563,6 +593,10 @@ function defaultDateTime(hoursFromNow = 0) {
   const date = new Date(Date.now() + hoursFromNow * 60 * 60 * 1000);
   const pad = (value) => String(value).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function isBlank(value) {
+  return !String(value ?? "").trim();
 }
 
 async function withSubmission(key, callback) {
@@ -722,6 +756,10 @@ async function updateTournamentDetails() {
   if (!selectedTournament.value) {
     return;
   }
+  if (isBlank(editForm.description)) {
+    notifier.pushNotification(tx("Опис турніру обов'язковий.", "Tournament description is required."), "error");
+    return;
+  }
   await withSubmission("updateTournament", async () => {
     await api.admin.updateTournament(selectedTournament.value.id, {
       ...editForm,
@@ -761,6 +799,10 @@ async function createAnnouncement() {
   if (!selectedTournament.value) {
     return;
   }
+  if (isBlank(announcementForm.content)) {
+    notifier.pushNotification(tx("Вміст оголошення обов'язковий.", "Announcement content is required."), "error");
+    return;
+  }
   await withSubmission("announcement", async () => {
     await api.admin.createAnnouncement(selectedTournament.value.id, announcementForm);
     notifier.pushNotification(tx("Оголошення опубліковано.", "Announcement published."), "success");
@@ -781,6 +823,10 @@ async function createScheduleEvent() {
 
 async function createTask() {
   if (!selectedTournament.value) {
+    return;
+  }
+  if (isBlank(taskForm.description)) {
+    notifier.pushNotification(tx("Опис завдання обов'язковий.", "Task description is required."), "error");
     return;
   }
   await withSubmission("task", async () => {

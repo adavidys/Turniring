@@ -32,7 +32,7 @@
       <div class="error-box" v-if="errorMessage && currentStep !== 4">{{ errorMessage }}</div>
 
       <SectionBlock v-if="currentStep === 1" :title="t('olympiad.step1Title')" :description="t('olympiad.step1Desc')" :eyebrow="t('olympiad.step1Eyebrow')">
-        <div class="field-grid">
+        <div class="field-grid single">
           <div class="field">
             <label>{{ t("olympiad.form.title") }}</label>
             <input v-model.trim="form.title" type="text" required minlength="3" maxlength="120" :class="{ 'is-invalid': fieldErrors.title }" />
@@ -40,12 +40,25 @@
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.description") }}</label>
-            <textarea v-model.trim="form.description" required minlength="20" maxlength="4000" :class="{ 'is-invalid': fieldErrors.description }"></textarea>
+            <MarkdownEditorField
+              v-model="form.description"
+              :label="t('olympiad.form.description')"
+              :button-text="tx('Редагувати опис у Markdown', 'Edit description in Markdown')"
+              :maxlength="4000"
+              :minlength="20"
+              :invalid="Boolean(fieldErrors.description)"
+            />
             <span class="field-error" v-if="fieldErrors.description">{{ fieldErrors.description }}</span>
           </div>
           <div class="field">
             <label>{{ t("olympiad.form.rules") }}</label>
-            <textarea v-model.trim="form.rules" maxlength="5000" :class="{ 'is-invalid': fieldErrors.rules }"></textarea>
+            <MarkdownEditorField
+              v-model="form.rules"
+              :label="t('olympiad.form.rules')"
+              :button-text="tx('Редагувати правила у Markdown', 'Edit rules in Markdown')"
+              :maxlength="5000"
+              :invalid="Boolean(fieldErrors.rules)"
+            />
             <span class="field-error" v-if="fieldErrors.rules">{{ fieldErrors.rules }}</span>
           </div>
         </div>
@@ -183,6 +196,7 @@
 <script setup>
 import { computed, reactive, ref } from "vue";
 import { RouterLink } from "vue-router";
+import MarkdownEditorField from "../components/MarkdownEditorField.vue";
 import SectionBlock from "../components/SectionBlock.vue";
 import TournamentCard from "../components/TournamentCard.vue";
 import { api } from "../services/api";

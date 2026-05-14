@@ -252,6 +252,27 @@ textarea {
   align-items: stretch;
 }
 
+.admin-split {
+  align-items: start;
+  gap: 12px;
+}
+
+.admin-page {
+  gap: 18px;
+}
+
+.admin-left-column {
+  gap: 12px;
+}
+
+.admin-right-column {
+  gap: 12px;
+}
+
+.admin-span-two {
+  grid-column: 1 / -1;
+}
+
 .triple {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -270,6 +291,10 @@ textarea {
 .triple > *,
 .grid-auto > * {
   height: 100%;
+}
+
+.admin-split > * {
+  height: auto;
 }
 
 .admin-tournament-selector {
@@ -514,6 +539,10 @@ textarea {
   display: grid;
   gap: 8px;
   align-content: start;
+}
+
+.field.field-wide {
+  grid-column: 1 / -1;
 }
 
 .field label {
